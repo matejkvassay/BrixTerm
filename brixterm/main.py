@@ -1,4 +1,5 @@
 import os
+import pty
 import subprocess
 
 import pyperclip
@@ -6,6 +7,7 @@ from llmbrix.agent import Agent
 from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
 from llmbrix.msg import SystemMsg, UserMsg
+from openai import AzureOpenAI, OpenAI
 from prompt_toolkit import PromptSession
 from prompt_toolkit.history import FileHistory
 from pydantic import BaseModel
@@ -14,8 +16,30 @@ from rich.text import Text
 
 from brixterm.hybrid_completer import HybridCompleter
 
+TERM_MODE_HIST = int(os.getenv("TERM_MODE_HIST", 3))
+CODE_MODE_HIST = int(os.getenv("TERM_MODE_HIST", 3))
+ANSWER_MODE_HIST = int(os.getenv("TERM_MODE_HIST", 5))
+MODEL = os.getenv("BRIX_TERM_MODEL", "gpt-4o-mini")
+HIST_FILE = os.path.expanduser("~/.llmbrix_shell_history")
 
-# ========== Models ==========
+
+def init_openai_client():
+    """
+    Initialize the appropriate OpenAI client based on environment variables.
+    Uses AzureOpenAI if AZURE_OPENAI_ENDPOINT is set, otherwise defaults to OpenAI.
+    """
+    if os.getenv("AZURE_OPENAI_ENDPOINT"):
+        return AzureOpenAI(
+            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
+            api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
+            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
+        )
+    else:
+        return OpenAI(
+            api_key=os.getenv("OPENAI_API_KEY"),
+        )
+
+
 class TerminalCommand(BaseModel):
     valid_terminal_command: str
 
@@ -24,34 +48,31 @@ class GeneratedCode(BaseModel):
     python_code: str
 
 
-# ========== AI Setup ==========
-MODEL = "gpt-4o-mini"
-HIST_FILE = os.path.expanduser("~/.llmbrix_shell_history")
+openai_client = init_openai_client()
 
 ai_bot = Agent(
-    gpt=GptOpenAI(model=MODEL),
-    chat_history=ChatHistory(),
+    gpt=GptOpenAI(model=MODEL, openai_client=openai_client),
+    chat_history=ChatHistory(max_turns=ANSWER_MODE_HIST),
     system_msg=SystemMsg(content="Super brief assistant which runs in a terminal window."),
 )
 
 code_bot = Agent(
-    gpt=GptOpenAI(model=MODEL, output_format=GeneratedCode),
-    chat_history=ChatHistory(),
+    gpt=GptOpenAI(model=MODEL, output_format=GeneratedCode, openai_client=openai_client),
+    chat_history=ChatHistory(max_turns=CODE_MODE_HIST),
     system_msg=SystemMsg(
         content="Only respond with valid Python code. No explanation. Docstrings for everything. No inline comments."
     ),
 )
 
 terminal_bot = Agent(
-    gpt=GptOpenAI(model=MODEL, output_format=TerminalCommand),
-    chat_history=ChatHistory(),
+    gpt=GptOpenAI(model=MODEL, output_format=TerminalCommand, openai_client=openai_client),
+    chat_history=ChatHistory(max_turns=TERM_MODE_HIST),
     system_msg=SystemMsg(
         content="Fix broken terminal commands or convert natural language to valid Unix commands. "
         "If not related to terminal command then return nothing."
     ),
 )
 
-# ========== Terminal Logic ==========
 console = Console()
 
 session = PromptSession(
@@ -62,35 +83,18 @@ session = PromptSession(
 
 def run_shell_command(cmd, cwd):
     """
-    Run `cmd` in directory `cwd`, printing stdout and stderr.
-    Returns the CompletedProcess so caller can inspect returncode & stderr.
+    Run `cmd` in directory `cwd` using a pseudo-terminal,
+    so full interactive programs (htop, vim, etc.) work.
+    Returns a CompletedProcess-like result with just the return code.
     """
-    env = os.environ.copy()
-    env["PWD"] = cwd
+    os.chdir(cwd)
 
     try:
-        result = subprocess.run(
-            cmd,
-            shell=True,
-            cwd=cwd,
-            env=env,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            text=True,
-        )
-        if result.stdout:
-            console.print(result.stdout.strip())
-        if result.stderr:
-            # Print stderr as info on success, or in red on failure
-            style = None if result.returncode == 0 else "red"
-            console.print(Text(result.stderr.strip(), style=style))
-        return result
-
+        exit_code = pty.spawn(["/bin/sh", "-c", cmd])
+        return subprocess.CompletedProcess(cmd, exit_code, stdout="", stderr="")
     except Exception as e:
         console.print(Text(f"Error running command: {e}", style="red"))
-        # create a dummy CompletedProcess with non-zero returncode
-        dummy = subprocess.CompletedProcess(cmd, 1, stdout="", stderr=str(e))
-        return dummy
+        return subprocess.CompletedProcess(cmd, 1, stdout="", stderr=str(e))
 
 
 def suggest_and_run(cmd, cwd):
@@ -112,7 +116,6 @@ def main():
 
     while True:
         try:
-            # build a cleaner prompt
             if cwd.startswith(home):
                 rel = os.path.relpath(cwd, home)
                 prompt_path = "~" if rel == "." else f"~/{rel}"
