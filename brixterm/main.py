@@ -155,20 +155,9 @@ def main():
                     console.print(Text("Copied to clipboard", style="dim"))
                 continue
 
-            # run anything else
             result = run_shell_command(cmd, cwd)
-            # decide whether to suggest a fix
             if result.returncode != 0:
-                base = cmd.split()[0]
-                stderr = (result.stderr or "").lower()
-                need_suggest = True
-                if base == "git":
-                    error_keywords = ["fatal", "error", "failed", "not a git command", "see git --help"]
-                    for kw in error_keywords:
-                        if kw in stderr:
-                            need_suggest = True
-                if need_suggest:
-                    suggest_and_run(cmd, cwd)
+                suggest_and_run(cmd, cwd)
 
         except (EOFError, KeyboardInterrupt):
             break
