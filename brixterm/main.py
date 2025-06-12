@@ -11,7 +11,7 @@ from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
 from pydantic import BaseModel
 from rich.console import Console
-from rich.markdown import Markdown
+from rich.text import Text
 
 
 # ========== Models ==========
@@ -57,12 +57,12 @@ def run_shell_command(cmd, cwd):
     try:
         result = subprocess.run(cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
         if result.stdout:
-            console.print(result.stdout.strip(), style="green")
+            console.print(result.stdout.strip())
         if result.stderr:
-            console.print(result.stderr.strip(), style="red")
+            console.print(Text(result.stderr.strip(), style="red"))
         return result.returncode
     except Exception as e:
-        console.print(f"[red]Error:[/red] {e}")
+        console.print(Text(f"Error: {e}", style="red"))
         return 1
 
 
@@ -70,23 +70,25 @@ def suggest_and_run(cmd, cwd):
     resp = terminal_bot.chat(UserMsg(content=cmd))
     suggestion = getattr(resp.content_parsed, "valid_terminal_command", "")
     if suggestion:
-        console.print(f"[yellow]💡 Suggestion:[/yellow] [cyan]{suggestion}[/cyan]")
+        console.print(Text(f"Did you mean: {suggestion}", style="yellow"))
         confirm = input("Run this? [y/N]: ").strip().lower()
         if confirm == "y":
             return run_shell_command(suggestion, cwd)
-    else:
-        console.print("[red]No AI suggestion available.[/red]")
     return 1
 
 
 def main():
     cwd = os.getcwd()
-    console.print("[bold green]🚀 AI Terminal (simplified)[/bold green]\n")
-
     while True:
         try:
-            cmd = session.prompt(f"[{os.path.basename(cwd)}] > ").strip()
-            if cmd in {"exit", "quit", "q"}:
+            prompt_path = os.path.relpath(cwd, os.path.expanduser("~"))
+            if not prompt_path.startswith(".."):
+                prompt_path = f"~/{prompt_path}".lstrip("~/")
+            prompt = f"{prompt_path} > "
+
+            cmd = session.prompt(prompt).strip()
+
+            if cmd in {"e", "exit", "quit", "q"}:
                 break
             elif cmd.startswith("cd "):
                 target = os.path.expanduser(cmd[3:].strip())
@@ -94,20 +96,20 @@ def main():
                 if os.path.isdir(new_dir):
                     cwd = new_dir
                 else:
-                    console.print(f"[red]No such directory:[/red] {target}")
+                    console.print(Text(f"No such directory: {target}", style="red"))
             elif cmd.startswith("a "):
                 question = cmd[2:].strip()
                 if question:
                     result = ai_bot.chat(UserMsg(content=question)).content
-                    console.print(Markdown(result))
+                    console.print(result)  # no markdown formatting
             elif cmd.startswith("c "):
                 prompt = cmd[2:].strip()
                 res = code_bot.chat(UserMsg(content=prompt))
                 code = getattr(res.content_parsed, "python_code", "")
                 if code:
                     pyperclip.copy(code)
-                    console.print(Markdown(code))
-                    console.print("[green]✅ Copied to clipboard[/green]")
+                    console.print(code)
+                    console.print(Text("Copied to clipboard", style="dim"))
             elif cmd:
                 result = run_shell_command(cmd, cwd)
                 if result != 0:
