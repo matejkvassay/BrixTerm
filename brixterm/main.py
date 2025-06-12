@@ -7,11 +7,12 @@ from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
 from llmbrix.msg import SystemMsg, UserMsg
 from prompt_toolkit import PromptSession
-from prompt_toolkit.completion import PathCompleter
 from prompt_toolkit.history import FileHistory
 from pydantic import BaseModel
 from rich.console import Console
 from rich.text import Text
+
+from brixterm.hybrid_completer import HybridCompleter
 
 
 # ========== Models ==========
@@ -47,18 +48,24 @@ terminal_bot = Agent(
 
 # ========== Terminal Logic ==========
 console = Console()
+
 session = PromptSession(
-    completer=PathCompleter(),
+    completer=HybridCompleter(),
     history=FileHistory(HIST_FILE),
 )
 
 
 def run_shell_command(cmd, cwd):
     try:
+        # Force child shells to use our logical PWD
+        env = os.environ.copy()
+        env["PWD"] = cwd
+
         result = subprocess.run(
             cmd,
             shell=True,
             cwd=cwd,
+            env=env,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             text=True,
@@ -95,41 +102,61 @@ def suggest_and_run(cmd, cwd):
 
 def main():
     cwd = os.getcwd()
+    home = os.path.expanduser("~")
+
     while True:
         try:
-            prompt_path = os.path.relpath(cwd, os.path.expanduser("~"))
-            if not prompt_path.startswith(".."):
-                prompt_path = f"~/{prompt_path}".lstrip("~/")
+            # Build a cleaner prompt:
+            if cwd.startswith(home):
+                # inside home: show as ~/...
+                rel = os.path.relpath(cwd, home)
+                prompt_path = "~" if rel == "." else f"~/{rel}"
+            else:
+                # outside home: full absolute path
+                prompt_path = cwd
+
             prompt = f"{prompt_path} > "
 
             cmd = session.prompt(prompt).strip()
 
             if cmd in {"e", "exit", "quit", "q"}:
                 break
+
             elif cmd.startswith("cd "):
-                target = os.path.expanduser(cmd[3:].strip())
-                new_dir = os.path.abspath(target)
+                raw = cmd[3:].strip()
+                # Expand ~ in the argument
+                target = os.path.expanduser(raw)
+                # Resolve against our logical cwd
+                if os.path.isabs(target):
+                    new_dir = os.path.abspath(target)
+                else:
+                    new_dir = os.path.abspath(os.path.join(cwd, target))
+
                 if os.path.isdir(new_dir):
                     cwd = new_dir
                 else:
-                    console.print(Text(f"No such directory: {target}", style="red"))
+                    console.print(Text(f"No such directory: {raw}", style="red"))
+
             elif cmd.startswith("a "):
                 question = cmd[2:].strip()
                 if question:
                     result = ai_bot.chat(UserMsg(content=question)).content
-                    console.print(result)  # no markdown formatting
+                    console.print(result)
+
             elif cmd.startswith("c "):
-                prompt = cmd[2:].strip()
-                res = code_bot.chat(UserMsg(content=prompt))
+                prompt_text = cmd[2:].strip()
+                res = code_bot.chat(UserMsg(content=prompt_text))
                 code = getattr(res.content_parsed, "python_code", "")
                 if code:
                     pyperclip.copy(code)
                     console.print(code)
                     console.print(Text("Copied to clipboard", style="dim"))
+
             elif cmd:
                 result = run_shell_command(cmd, cwd)
                 if result != 0:
                     suggest_and_run(cmd, cwd)
+
         except (EOFError, KeyboardInterrupt):
             break
 
