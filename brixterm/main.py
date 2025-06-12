@@ -31,19 +31,24 @@ HIST_FILE = os.path.expanduser("~/.llmbrix_shell_history")
 ai_bot = Agent(
     gpt=GptOpenAI(model=MODEL),
     chat_history=ChatHistory(),
-    system_msg=SystemMsg(content="Concise assistant in a terminal window."),
+    system_msg=SystemMsg(content="Super brief assistant which runs in a terminal window."),
 )
 
 code_bot = Agent(
     gpt=GptOpenAI(model=MODEL, output_format=GeneratedCode),
     chat_history=ChatHistory(),
-    system_msg=SystemMsg(content="Only respond with valid Python code. No explanation."),
+    system_msg=SystemMsg(
+        content="Only respond with valid Python code. No explanation. Docstrings for everything. " "No inline comments."
+    ),
 )
 
 terminal_bot = Agent(
     gpt=GptOpenAI(model=MODEL, output_format=TerminalCommand),
     chat_history=ChatHistory(),
-    system_msg=SystemMsg(content="Fix broken terminal commands or convert natural language to valid Unix commands."),
+    system_msg=SystemMsg(
+        content="Fix broken terminal commands or convert natural language to valid Unix commands. "
+        "If not related to terminal command then return nothing."
+    ),
 )
 
 # ========== Terminal Logic ==========
@@ -71,11 +76,9 @@ def run_shell_command(cmd, cwd):
             text=True,
         )
 
-        # Always print stdout
         if result.stdout:
             console.print(result.stdout.strip())
 
-        # Treat stderr as info if the command succeeded (e.g. git)
         if result.stderr:
             if result.returncode == 0:
                 console.print(result.stderr.strip())
@@ -106,13 +109,10 @@ def main():
 
     while True:
         try:
-            # Build a cleaner prompt:
             if cwd.startswith(home):
-                # inside home: show as ~/...
                 rel = os.path.relpath(cwd, home)
                 prompt_path = "~" if rel == "." else f"~/{rel}"
             else:
-                # outside home: full absolute path
                 prompt_path = cwd
 
             prompt = f"{prompt_path} > "
@@ -124,9 +124,7 @@ def main():
 
             elif cmd.startswith("cd "):
                 raw = cmd[3:].strip()
-                # Expand ~ in the argument
                 target = os.path.expanduser(raw)
-                # Resolve against our logical cwd
                 if os.path.isabs(target):
                     new_dir = os.path.abspath(target)
                 else:
