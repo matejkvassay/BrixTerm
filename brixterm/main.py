@@ -55,12 +55,28 @@ session = PromptSession(
 
 def run_shell_command(cmd, cwd):
     try:
-        result = subprocess.run(cmd, shell=True, cwd=cwd, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+        result = subprocess.run(
+            cmd,
+            shell=True,
+            cwd=cwd,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+        )
+
+        # Always print stdout
         if result.stdout:
             console.print(result.stdout.strip())
+
+        # Treat stderr as info if the command succeeded (e.g. git)
         if result.stderr:
-            console.print(Text(result.stderr.strip(), style="red"))
+            if result.returncode == 0:
+                console.print(result.stderr.strip())
+            else:
+                console.print(Text(result.stderr.strip(), style="red"))
+
         return result.returncode
+
     except Exception as e:
         console.print(Text(f"Error: {e}", style="red"))
         return 1
