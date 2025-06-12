@@ -38,7 +38,7 @@ code_bot = Agent(
     gpt=GptOpenAI(model=MODEL, output_format=GeneratedCode),
     chat_history=ChatHistory(),
     system_msg=SystemMsg(
-        content="Only respond with valid Python code. No explanation. Docstrings for everything. " "No inline comments."
+        content="Only respond with valid Python code. No explanation. Docstrings for everything. No inline comments."
     ),
 )
 
@@ -61,11 +61,14 @@ session = PromptSession(
 
 
 def run_shell_command(cmd, cwd):
-    try:
-        # Force child shells to use our logical PWD
-        env = os.environ.copy()
-        env["PWD"] = cwd
+    """
+    Run `cmd` in directory `cwd`, printing stdout and stderr.
+    Returns the CompletedProcess so caller can inspect returncode & stderr.
+    """
+    env = os.environ.copy()
+    env["PWD"] = cwd
 
+    try:
         result = subprocess.run(
             cmd,
             shell=True,
@@ -75,32 +78,32 @@ def run_shell_command(cmd, cwd):
             stderr=subprocess.PIPE,
             text=True,
         )
-
         if result.stdout:
             console.print(result.stdout.strip())
-
         if result.stderr:
-            if result.returncode == 0:
-                console.print(result.stderr.strip())
-            else:
-                console.print(Text(result.stderr.strip(), style="red"))
-
-        return result.returncode
+            # Print stderr as info on success, or in red on failure
+            style = None if result.returncode == 0 else "red"
+            console.print(Text(result.stderr.strip(), style=style))
+        return result
 
     except Exception as e:
-        console.print(Text(f"Error: {e}", style="red"))
-        return 1
+        console.print(Text(f"Error running command: {e}", style="red"))
+        # create a dummy CompletedProcess with non-zero returncode
+        dummy = subprocess.CompletedProcess(cmd, 1, stdout="", stderr=str(e))
+        return dummy
 
 
 def suggest_and_run(cmd, cwd):
+    """
+    Ask the AI for a fixed command, then prompt user to run it.
+    """
     resp = terminal_bot.chat(UserMsg(content=cmd))
     suggestion = getattr(resp.content_parsed, "valid_terminal_command", "")
-    if suggestion:
+    if suggestion and suggestion != cmd:
         console.print(Text(f"Did you mean: {suggestion}", style="yellow"))
         confirm = input("Run this? [y/N]: ").strip().lower()
         if confirm == "y":
-            return run_shell_command(suggestion, cwd)
-    return 1
+            run_shell_command(suggestion, cwd)
 
 
 def main():
@@ -109,39 +112,40 @@ def main():
 
     while True:
         try:
+            # build a cleaner prompt
             if cwd.startswith(home):
                 rel = os.path.relpath(cwd, home)
                 prompt_path = "~" if rel == "." else f"~/{rel}"
             else:
                 prompt_path = cwd
-
             prompt = f"{prompt_path} > "
 
             cmd = session.prompt(prompt).strip()
+            if not cmd:
+                continue
 
             if cmd in {"e", "exit", "quit", "q"}:
                 break
 
-            elif cmd.startswith("cd "):
+            if cmd.startswith("cd "):
                 raw = cmd[3:].strip()
                 target = os.path.expanduser(raw)
-                if os.path.isabs(target):
-                    new_dir = os.path.abspath(target)
-                else:
-                    new_dir = os.path.abspath(os.path.join(cwd, target))
-
+                new_dir = target if os.path.isabs(target) else os.path.join(cwd, target)
+                new_dir = os.path.abspath(new_dir)
                 if os.path.isdir(new_dir):
                     cwd = new_dir
                 else:
                     console.print(Text(f"No such directory: {raw}", style="red"))
+                continue
 
-            elif cmd.startswith("a "):
+            if cmd.startswith("a "):
                 question = cmd[2:].strip()
                 if question:
-                    result = ai_bot.chat(UserMsg(content=question)).content
-                    console.print(result)
+                    ans = ai_bot.chat(UserMsg(content=question)).content
+                    console.print(ans)
+                continue
 
-            elif cmd.startswith("c "):
+            if cmd.startswith("c "):
                 prompt_text = cmd[2:].strip()
                 res = code_bot.chat(UserMsg(content=prompt_text))
                 code = getattr(res.content_parsed, "python_code", "")
@@ -149,10 +153,19 @@ def main():
                     pyperclip.copy(code)
                     console.print(code)
                     console.print(Text("Copied to clipboard", style="dim"))
+                continue
 
-            elif cmd:
-                result = run_shell_command(cmd, cwd)
-                if result != 0:
+            # run anything else
+            result = run_shell_command(cmd, cwd)
+            # decide whether to suggest a fix
+            if result.returncode != 0:
+                base = cmd.split()[0]
+                stderr = (result.stderr or "").lower()
+                need_suggest = True
+                if base == "git":
+                    # only on real git errors
+                    need_suggest = ("fatal:" in stderr) or ("error:" in stderr)
+                if need_suggest:
                     suggest_and_run(cmd, cwd)
 
         except (EOFError, KeyboardInterrupt):
