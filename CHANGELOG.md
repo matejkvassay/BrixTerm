@@ -4,4 +4,5 @@
 - interactive session support
 - working command history
 - completions with TAB
-- third party license
+- scripts to manage licenses and release
+- third party license mentions
