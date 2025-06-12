@@ -163,8 +163,10 @@ def main():
                 stderr = (result.stderr or "").lower()
                 need_suggest = True
                 if base == "git":
-                    # only on real git errors
-                    need_suggest = ("fatal:" in stderr) or ("error:" in stderr)
+                    error_keywords = ["fatal", "error", "failed", "not a git command", "see git --help"]
+                    for kw in error_keywords:
+                        if kw in stderr:
+                            need_suggest = True
                 if need_suggest:
                     suggest_and_run(cmd, cwd)
 
