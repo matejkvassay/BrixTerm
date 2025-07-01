@@ -1,182 +1,66 @@
-import os
-import pty
-import subprocess
-
-import pyperclip
-from llmbrix.agent import Agent
-from llmbrix.chat_history import ChatHistory
-from llmbrix.gpt_openai import GptOpenAI
-from llmbrix.msg import SystemMsg, UserMsg
-from openai import AzureOpenAI, OpenAI
-from prompt_toolkit import PromptSession
-from prompt_toolkit.history import FileHistory
-from pydantic import BaseModel
-from rich.console import Console
-from rich.text import Text
-
-from brixterm.hybrid_completer import HybridCompleter
-
-TERM_MODE_HIST = int(os.getenv("BRIX_TERM_HIST", 3))
-CODE_MODE_HIST = int(os.getenv("BRIX_TERM_CODE_HIST", 3))
-ANSWER_MODE_HIST = int(os.getenv("BRIX_TERM_CHAT_HIST", 5))
-MODEL = os.getenv("BRIX_TERM_MODEL", "gpt-4o-mini")
-HIST_FILE = os.path.expanduser("~/.llmbrix_shell_history")
+import httpx
+from textual import work
+from textual.app import App, ComposeResult
+from textual.containers import VerticalScroll
+from textual.widgets import Input, Markdown
 
 
-def init_openai_client():
-    """
-    Initialize the appropriate OpenAI client based on environment variables.
-    Uses AzureOpenAI if AZURE_OPENAI_ENDPOINT is set, otherwise defaults to OpenAI.
-    """
-    if os.getenv("AZURE_OPENAI_ENDPOINT"):
-        return AzureOpenAI(
-            api_key=os.getenv("AZURE_OPENAI_API_KEY"),
-            api_version=os.getenv("AZURE_OPENAI_API_VERSION"),
-            azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        )
-    else:
-        return OpenAI(
-            api_key=os.getenv("OPENAI_API_KEY"),
-        )
+class DictionaryApp(App):
+    """Searches a dictionary API as-you-type."""
 
+    CSS_PATH = "style.tcss"
 
-class TerminalCommand(BaseModel):
-    valid_terminal_command: str
+    def compose(self) -> ComposeResult:
+        yield Input(placeholder="Search for a word", id="dictionary-search")
+        with VerticalScroll(id="results-container"):
+            yield Markdown(id="results")
 
+    async def on_input_changed(self, message: Input.Changed) -> None:
+        """A coroutine to handle a text changed message."""
+        if message.value:
+            self.lookup_word(message.value)
+        else:
+            # Clear the results
+            await self.query_one("#results", Markdown).update("")
 
-class GeneratedCode(BaseModel):
-    python_code: str
+    @work(exclusive=True)
+    async def lookup_word(self, word: str) -> None:
+        """Looks up a word."""
+        url = f"https://api.dictionaryapi.dev/api/v2/entries/en/{word}"
 
+        async with httpx.AsyncClient() as client:
+            response = await client.get(url)
+            try:
+                results = response.json()
+            except Exception:
+                await self.query_one("#results", Markdown).update(response.text)
+                return
 
-openai_client = init_openai_client()
+        if word == self.query_one(Input).value:
+            markdown = self.make_word_markdown(results=results)
+            await self.query_one("#results", Markdown).update(markdown)
 
-ai_bot = Agent(
-    gpt=GptOpenAI(model=MODEL, openai_client=openai_client),
-    chat_history=ChatHistory(max_turns=ANSWER_MODE_HIST),
-    system_msg=SystemMsg(content="Super brief assistant which runs in a terminal window."),
-)
+    @staticmethod
+    def make_word_markdown(results: object) -> str:
+        """Convert the results into markdown."""
+        lines = []
+        if isinstance(results, dict):
+            lines.append(f"# {results['title']}")
+            lines.append(results["message"])
+        elif isinstance(results, list):
+            for result in results:
+                lines.append(f"# {result['word']}")
+                lines.append("")
+                for meaning in result.get("meanings", []):
+                    lines.append(f"_{meaning['partOfSpeech']}_")
+                    lines.append("")
+                    for definition in meaning.get("definitions", []):
+                        lines.append(f" - {definition['definition']}")
+                    lines.append("---")
 
-code_bot = Agent(
-    gpt=GptOpenAI(model=MODEL, output_format=GeneratedCode, openai_client=openai_client),
-    chat_history=ChatHistory(max_turns=CODE_MODE_HIST),
-    system_msg=SystemMsg(
-        content="Only respond with valid Python code. No explanation. Docstrings for everything. No inline comments."
-    ),
-)
-
-terminal_bot = Agent(
-    gpt=GptOpenAI(model=MODEL, output_format=TerminalCommand, openai_client=openai_client),
-    chat_history=ChatHistory(max_turns=TERM_MODE_HIST),
-    system_msg=SystemMsg(
-        content="Fix broken terminal commands or convert natural language to valid Unix commands. "
-        "If not related to terminal command then return nothing."
-    ),
-)
-
-console = Console()
-
-session = PromptSession(
-    completer=HybridCompleter(),
-    history=FileHistory(HIST_FILE),
-)
-
-
-def run_shell_command(cmd, cwd):
-    """
-    Run `cmd` in directory `cwd` using a pseudo-terminal,
-    so full interactive programs (htop, vim, etc.) work.
-    Returns a CompletedProcess-like result with just the return code.
-    """
-    os.chdir(cwd)
-
-    try:
-        exit_code = pty.spawn(["/bin/sh", "-c", cmd])
-        return subprocess.CompletedProcess(cmd, exit_code, stdout="", stderr="")
-    except Exception as e:
-        console.print(Text(f"Error running command: {e}", style="red"))
-        return subprocess.CompletedProcess(cmd, 1, stdout="", stderr=str(e))
-
-
-def suggest_and_run(cmd, cwd):
-    """
-    Ask the AI for a fixed command, then prompt user to run it.
-    """
-    resp = terminal_bot.chat(UserMsg(content=cmd))
-    suggestion = getattr(resp.content_parsed, "valid_terminal_command", "")
-    if suggestion and suggestion != cmd:
-        console.print(Text(f"Did you mean: {suggestion}", style="yellow"))
-        confirm = input("Run this? [y/N]: ").strip().lower()
-        if confirm == "y":
-            if suggestion.startswith("cd "):
-                raw = suggestion[3:].strip()
-                target = os.path.expanduser(raw)
-                new_dir = target if os.path.isabs(target) else os.path.join(cwd, target)
-                new_dir = os.path.abspath(new_dir)
-                if os.path.isdir(new_dir):
-                    return new_dir
-                else:
-                    console.print(Text(f"No such directory: {raw}", style="red"))
-                return cwd
-            run_shell_command(suggestion, cwd)
-    return cwd
-
-
-def main():
-    cwd = os.getcwd()
-    home = os.path.expanduser("~")
-
-    while True:
-        try:
-            if cwd.startswith(home):
-                rel = os.path.relpath(cwd, home)
-                prompt_path = "~" if rel == "." else f"~/{rel}"
-            else:
-                prompt_path = cwd
-            prompt = f"{prompt_path} > "
-
-            cmd = session.prompt(prompt).strip()
-            if not cmd:
-                continue
-
-            if cmd in {"e", "exit", "quit", "q"}:
-                break
-
-            if cmd.startswith("cd "):
-                raw = cmd[3:].strip()
-                target = os.path.expanduser(raw)
-                new_dir = target if os.path.isabs(target) else os.path.join(cwd, target)
-                new_dir = os.path.abspath(new_dir)
-                if os.path.isdir(new_dir):
-                    cwd = new_dir
-                else:
-                    console.print(Text(f"No such directory: {raw}", style="red"))
-                    cwd = suggest_and_run(cmd, cwd)
-                continue
-
-            if cmd.startswith("a "):
-                question = cmd[2:].strip()
-                if question:
-                    ans = ai_bot.chat(UserMsg(content=question)).content
-                    console.print(ans)
-                continue
-
-            if cmd.startswith("c "):
-                prompt_text = cmd[2:].strip()
-                res = code_bot.chat(UserMsg(content=prompt_text))
-                code = getattr(res.content_parsed, "python_code", "")
-                if code:
-                    pyperclip.copy(code)
-                    console.print(code)
-                    console.print(Text("Copied to clipboard", style="dim"))
-                continue
-
-            result = run_shell_command(cmd, cwd)
-            if result.returncode != 0:
-                cwd = suggest_and_run(cmd, cwd)
-
-        except (EOFError, KeyboardInterrupt):
-            break
+        return "\n".join(lines)
 
 
 if __name__ == "__main__":
-    main()
+    app = DictionaryApp()
+    app.run()

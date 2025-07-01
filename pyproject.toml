@@ -13,9 +13,9 @@ readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
     "llmbrix>=0.1.0a8",
-    "prompt-toolkit",
     "rich",
-    "pyperclip"
+    "pyperclip",
+    "textual"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
