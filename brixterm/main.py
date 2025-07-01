@@ -16,9 +16,9 @@ from rich.text import Text
 
 from brixterm.hybrid_completer import HybridCompleter
 
-TERM_MODE_HIST = int(os.getenv("TERM_MODE_HIST", 3))
-CODE_MODE_HIST = int(os.getenv("TERM_MODE_HIST", 3))
-ANSWER_MODE_HIST = int(os.getenv("TERM_MODE_HIST", 5))
+TERM_MODE_HIST = int(os.getenv("BRIX_TERM_HIST", 3))
+CODE_MODE_HIST = int(os.getenv("BRIX_TERM_CODE_HIST", 3))
+ANSWER_MODE_HIST = int(os.getenv("BRIX_TERM_CHAT_HIST", 5))
 MODEL = os.getenv("BRIX_TERM_MODEL", "gpt-4o-mini")
 HIST_FILE = os.path.expanduser("~/.llmbrix_shell_history")
 
@@ -107,7 +107,18 @@ def suggest_and_run(cmd, cwd):
         console.print(Text(f"Did you mean: {suggestion}", style="yellow"))
         confirm = input("Run this? [y/N]: ").strip().lower()
         if confirm == "y":
+            if suggestion.startswith("cd "):
+                raw = suggestion[3:].strip()
+                target = os.path.expanduser(raw)
+                new_dir = target if os.path.isabs(target) else os.path.join(cwd, target)
+                new_dir = os.path.abspath(new_dir)
+                if os.path.isdir(new_dir):
+                    return new_dir
+                else:
+                    console.print(Text(f"No such directory: {raw}", style="red"))
+                return cwd
             run_shell_command(suggestion, cwd)
+    return cwd
 
 
 def main():
@@ -139,6 +150,7 @@ def main():
                     cwd = new_dir
                 else:
                     console.print(Text(f"No such directory: {raw}", style="red"))
+                    cwd = suggest_and_run(cmd, cwd)
                 continue
 
             if cmd.startswith("a "):
@@ -160,7 +172,7 @@ def main():
 
             result = run_shell_command(cmd, cwd)
             if result.returncode != 0:
-                suggest_and_run(cmd, cwd)
+                cwd = suggest_and_run(cmd, cwd)
 
         except (EOFError, KeyboardInterrupt):
             break
