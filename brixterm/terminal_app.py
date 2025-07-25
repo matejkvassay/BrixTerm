@@ -35,7 +35,10 @@ class TerminalApp:
         user = getpass.getuser()
         host = socket.gethostname()
         cwd_name = self.get_logical_cwd_name(self.logical_cwd)
-        return ConsoleContext(cwd=self.cwd, cwd_name=cwd_name, user=user, host=host, venv=venv)
+        list_dir = self.command_executor.execute_shell_cmd("ls -a").stdout
+        if list_dir:
+            list_dir = list_dir[:1000]
+        return ConsoleContext(cwd=self.cwd, cwd_name=cwd_name, user=user, host=host, venv=venv, list_dir=list_dir)
 
     def read_input(self) -> tuple[str, ConsoleContext]:
         ctx = self.get_context()
@@ -54,29 +57,41 @@ class TerminalApp:
                     ctx = self.get_context()
 
                 if cmd.lower() in ("exit", "e", "quit", "q"):
+                    cmd = None
                     break
                 elif cmd.startswith("!"):
                     self.command_executor.execute_interactive_shell_cmd(cmd[1:])
+                    cmd = None
                 elif cmd.startswith("cd "):
-                    self.cwd, self.logical_cwd = self.command_executor.execute_cd_cmd(cmd)
+                    try:
+                        self.cwd, self.logical_cwd = self.command_executor.execute_cd_cmd(cmd)
+                        cmd = None
+                    except Exception:
+                        cmd = self.smart_terminal.run(cmd, ctx)
                 elif cmd == "clear":
                     os.system("cls" if os.name == "nt" else "clear")
+                    cmd = None
                 else:
                     cmd_name = cmd.split(" ")[0].strip()
                     cmd_content = " ".join(cmd.split(" ")[1:])
 
                     if cmd_name == "a":
                         self.console_printer.print(f"Asking LLM: {cmd_content}")
+                        cmd = None
                         continue
                     elif cmd_name == "c":
                         self.console_printer.print(f"Generating code for question: {cmd_content}")
+                        cmd = None
                         continue
                     elif cmd_name == "cr":
                         self.console_printer.print(f"Running code review for: {cmd_content}")
+                        cmd = None
                         continue
                     else:
                         cmd = self.smart_terminal.run(cmd, ctx)
             except KeyboardInterrupt:
                 self.console_printer.print("\n(Interrupted)")
+                cmd = None
             except Exception as e:
                 self.console_printer.print(f"Error: {e}")
+                cmd = None

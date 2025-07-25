@@ -8,3 +8,4 @@ class ConsoleContext:
     venv: str
     user: str
     host: str
+    list_dir: str
