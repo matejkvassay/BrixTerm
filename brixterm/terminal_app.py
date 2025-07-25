@@ -3,16 +3,16 @@ import os
 import readline  # noqa: F401
 import socket
 
-from brixterm.command_executor import CommandExecutor
+from brixterm.ai import SmartTerminal
 from brixterm.console_context import ConsoleContext
 from brixterm.console_printer import ConsolePrinter
 from brixterm.constants import INTRODUCTION_MSG, TERM_INPUT_PREFIX
 
 
 class TerminalApp:
-    def __init__(self):
-        self.executor = CommandExecutor()
-        self.printer = ConsolePrinter()
+    def __init__(self, console_printer: ConsolePrinter, smart_terminal: SmartTerminal):
+        self.smart_terminal = smart_terminal
+        self.console_printer = console_printer
         self.cwd = os.getcwd()
         self.logical_cwd = os.environ.get("PWD", self.cwd)
 
@@ -40,7 +40,7 @@ class TerminalApp:
         return cmd, ctx
 
     def run(self):
-        self.printer.print(INTRODUCTION_MSG)
+        self.console_printer.print(INTRODUCTION_MSG)
         while True:
             try:
                 cmd, ctx = self.read_input()
@@ -60,20 +60,17 @@ class TerminalApp:
                     cmd_content = " ".join(cmd.split(" ")[1:])
 
                     if cmd_name == "a":
-                        self.printer.print(f"Asking LLM: {cmd_content}")
+                        self.console_printer.print(f"Asking LLM: {cmd_content}")
                         continue
                     elif cmd_name == "c":
-                        self.printer.print(f"Generating code for question: {cmd_content}")
+                        self.console_printer.print(f"Generating code for question: {cmd_content}")
                         continue
                     elif cmd_name == "cr":
-                        self.printer.print(f"Running code review for: {cmd_content}")
+                        self.console_printer.print(f"Running code review for: {cmd_content}")
                         continue
                     else:
-                        completed_process = self.executor.execute_shell_cmd(cmd)
-                        self.printer.print_subprocess_output(completed_process)
-                        if completed_process.returncode != 0:
-                            self.printer.print("Running AI command correction.")
+                        self.smart_terminal.run(cmd, ctx)
             except KeyboardInterrupt:
-                self.printer.print("\n(Interrupted)")
+                self.console_printer.print("\n(Interrupted)")
             except Exception as e:
-                self.printer.print(f"Error: {e}")
+                self.console_printer.print(f"Error: {e}")
