@@ -61,15 +61,19 @@ class TerminalApp:
                     break
                 elif cmd.startswith("!"):
                     self.command_executor.execute_interactive_shell_cmd(cmd[1:])
+                    self.smart_terminal.record_successful_cmd(cmd, None)
                     cmd = None
+
                 elif cmd.startswith("cd "):
                     try:
                         self.cwd, self.logical_cwd = self.command_executor.execute_cd_cmd(cmd)
+                        self.smart_terminal.record_successful_cmd(cmd, None)
                         cmd = None
                     except Exception:
                         cmd = self.smart_terminal.run(cmd, ctx)
                 elif cmd == "clear":
                     os.system("cls" if os.name == "nt" else "clear")
+                    self.smart_terminal.record_successful_cmd(cmd, None)
                     cmd = None
                 else:
                     cmd_name = cmd.split(" ")[0].strip()

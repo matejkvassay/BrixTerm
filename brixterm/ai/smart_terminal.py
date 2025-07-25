@@ -3,7 +3,7 @@ from subprocess import CompletedProcess
 from llmbrix.agent import Agent
 from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
-from llmbrix.msg import SystemMsg, UserMsg
+from llmbrix.msg import AssistantMsg, SystemMsg, UserMsg
 from llmbrix.prompt import Prompt
 from pydantic import BaseModel
 
@@ -12,10 +12,8 @@ from brixterm.console_context import ConsoleContext
 from brixterm.console_printer import ConsolePrinter
 
 SYS_PROMPT = (
-    "User will typed command into terminal but it failed."
-    "If the command seems like user tried to execute some unix terminal command but did a mistake or typo "
-    "then try to suggest corrected version of that command."
-    "If the command doesnt resemble valid unix command then return nothing."
+    "User will typed command into terminal but it failed. "
+    "Suggest corrected unix command that would work for the user."
 )
 
 USER_PROMPT = Prompt(
@@ -97,7 +95,24 @@ class SmartTerminal:
                 self.console_printer.print("\n[bold red]Command failed.[/bold red]")
                 self.console_printer.print(f"Suggested fix:\n  [bold green]{suggested_cmd}[/bold green]")
                 self.console_printer.print("\n[cyan]Do you want to run the suggested command?[/cyan]")
-                user_input = input("  [y/N]: ").strip()
+                user_input = input("  [y / N / feedback]: ").strip()
 
                 if user_input.strip().lower() == "y":
                     return suggested_cmd
+                elif user_input.strip().lower() != "n":
+                    return user_input
+        else:
+            self.record_successful_cmd(cmd, completed_process)
+
+    def record_successful_cmd(self, cmd, completed_process: CompletedProcess = None):
+        if not completed_process:
+            completed_process = CompletedProcess(args=[], returncode=0)
+
+        msg = AssistantMsg(
+            content=f'Successfully ran command: "{cmd}"\n\n'
+            f"\n Command output: "
+            f"\n Return code: \n{completed_process.returncode}\n\n"
+            f"\n Stdout: \n{completed_process.stdout}\n\n"
+            f"\n Stderr: \n{completed_process.stderr}\n\n"
+        )
+        self.terminal_agent.chat_history.add(msg)
