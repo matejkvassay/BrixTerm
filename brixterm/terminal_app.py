@@ -33,19 +33,19 @@ class TerminalApp:
         cwd_name = self.get_logical_cwd_name(self.logical_cwd)
         return ConsoleContext(cwd=self.cwd, cwd_name=cwd_name, user=user, host=host, venv=venv)
 
-    def read_input(self) -> str:
+    def read_input(self) -> tuple[str, ConsoleContext]:
         ctx = self.get_context()
         content = TERM_INPUT_PREFIX.format(ctx.venv, ctx.user, ctx.host, ctx.cwd_name)
         cmd = input(content).strip()
-        return cmd
+        return cmd, ctx
 
     def run(self):
         self.printer.print(INTRODUCTION_MSG)
         while True:
             try:
-                cmd = self.read_input()
+                cmd, ctx = self.read_input()
 
-                if cmd.lower() in ("exit", "e"):
+                if cmd.lower() in ("exit", "e", "quit", "q"):
                     break
                 elif not cmd:
                     continue
@@ -53,6 +53,8 @@ class TerminalApp:
                     self.executor.execute_interactive_shell_cmd(cmd[1:])
                 elif cmd.startswith("cd "):
                     self.cwd, self.logical_cwd = self.executor.execute_cd_cmd(cmd)
+                elif cmd == "clear":
+                    os.system("cls" if os.name == "nt" else "clear")
                 else:
                     cmd_name = cmd.split(" ")[0].strip()
                     cmd_content = " ".join(cmd.split(" ")[1:])

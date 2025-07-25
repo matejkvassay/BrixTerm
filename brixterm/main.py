@@ -1,5 +1,10 @@
 from brixterm.terminal_app import TerminalApp
 
-if __name__ == "__main__":
+
+def main():
     app = TerminalApp()
     app.run()
+
+
+if __name__ == "__main__":
+    main()
