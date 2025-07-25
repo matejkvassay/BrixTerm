@@ -4,15 +4,19 @@ import readline  # noqa: F401
 import socket
 
 from brixterm.ai import SmartTerminal
+from brixterm.command_executor import CommandExecutor
 from brixterm.console_context import ConsoleContext
 from brixterm.console_printer import ConsolePrinter
 from brixterm.constants import INTRODUCTION_MSG, TERM_INPUT_PREFIX
 
 
 class TerminalApp:
-    def __init__(self, console_printer: ConsolePrinter, smart_terminal: SmartTerminal):
+    def __init__(
+        self, console_printer: ConsolePrinter, command_executor: CommandExecutor, smart_terminal: SmartTerminal
+    ):
         self.smart_terminal = smart_terminal
         self.console_printer = console_printer
+        self.command_executor = command_executor
         self.cwd = os.getcwd()
         self.logical_cwd = os.environ.get("PWD", self.cwd)
 
@@ -40,19 +44,21 @@ class TerminalApp:
         return cmd, ctx
 
     def run(self):
+        cmd = None
         self.console_printer.print(INTRODUCTION_MSG)
         while True:
             try:
-                cmd, ctx = self.read_input()
+                if not cmd:
+                    cmd, ctx = self.read_input()
+                else:
+                    ctx = self.get_context()
 
                 if cmd.lower() in ("exit", "e", "quit", "q"):
                     break
-                elif not cmd:
-                    continue
                 elif cmd.startswith("!"):
-                    self.executor.execute_interactive_shell_cmd(cmd[1:])
+                    self.command_executor.execute_interactive_shell_cmd(cmd[1:])
                 elif cmd.startswith("cd "):
-                    self.cwd, self.logical_cwd = self.executor.execute_cd_cmd(cmd)
+                    self.cwd, self.logical_cwd = self.command_executor.execute_cd_cmd(cmd)
                 elif cmd == "clear":
                     os.system("cls" if os.name == "nt" else "clear")
                 else:
@@ -69,7 +75,7 @@ class TerminalApp:
                         self.console_printer.print(f"Running code review for: {cmd_content}")
                         continue
                     else:
-                        self.smart_terminal.run(cmd, ctx)
+                        cmd = self.smart_terminal.run(cmd, ctx)
             except KeyboardInterrupt:
                 self.console_printer.print("\n(Interrupted)")
             except Exception as e:

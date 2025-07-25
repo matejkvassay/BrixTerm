@@ -1,3 +1,5 @@
+from subprocess import CompletedProcess
+
 from brixterm.command_executor import CommandExecutor
 from brixterm.console_context import ConsoleContext
 from brixterm.console_printer import ConsolePrinter
@@ -13,10 +15,14 @@ class SmartTerminal:
         self.console_printer.print_subprocess_output(completed_process)
         return completed_process
 
+    def _suggest_command(self, cmd: str, completed_process: CompletedProcess, ctx: ConsoleContext):
+        # todo
+        return "ls -la"
+
     def run(self, cmd: str, ctx: ConsoleContext):
         completed_process = self._run_and_print(cmd)
         if completed_process.returncode != 0:
-            suggested_cmd = "ls -la"  # TODO
+            suggested_cmd = self._suggest_command(cmd=cmd, completed_process=completed_process, ctx=ctx)
             if suggested_cmd:
                 self.console_printer.print("\n[bold red]Command failed.[/bold red]")
                 self.console_printer.print(f"Suggested fix:\n  [bold green]{suggested_cmd}[/bold green]")
@@ -24,5 +30,4 @@ class SmartTerminal:
                 user_input = input("  [y/N]: ").strip()
 
                 if user_input.strip().lower() == "y":
-                    completed_process = self._run_and_print(suggested_cmd)
-        return completed_process
+                    return suggested_cmd

@@ -8,7 +8,7 @@ def main():
     printer = ConsolePrinter()
     executor = CommandExecutor()
     smart_terminal = SmartTerminal(console_printer=printer, command_executor=executor)
-    app = TerminalApp(console_printer=printer, smart_terminal=smart_terminal)
+    app = TerminalApp(console_printer=printer, command_executor=executor, smart_terminal=smart_terminal)
     app.run()
 
 
