@@ -1,7 +1,7 @@
 import getpass
 import os
+import readline  # noqa: F401
 import socket
-from collections import deque
 
 from brixterm.command_executor import CommandExecutor
 from brixterm.console_context import ConsoleContext
@@ -10,12 +10,11 @@ from brixterm.constants import INTRODUCTION_MSG, TERM_INPUT_PREFIX
 
 
 class TerminalApp:
-    def __init__(self, max_hist=100):
+    def __init__(self):
         self.executor = CommandExecutor()
         self.printer = ConsolePrinter()
         self.cwd = os.getcwd()
         self.logical_cwd = os.environ.get("PWD", self.cwd)
-        self.cmd_hist = deque(maxlen=max_hist)
 
     @staticmethod
     def get_logical_cwd_name(cwd: str) -> str:
@@ -36,25 +35,42 @@ class TerminalApp:
 
     def read_input(self) -> str:
         ctx = self.get_context()
-        prefix = TERM_INPUT_PREFIX.format(ctx.venv, ctx.user, ctx.host, ctx.cwd_name)
-        return input(prefix).strip()
+        content = TERM_INPUT_PREFIX.format(ctx.venv, ctx.user, ctx.host, ctx.cwd_name)
+        cmd = input(content).strip()
+        return cmd
 
     def run(self):
         self.printer.print(INTRODUCTION_MSG)
         while True:
             try:
                 cmd = self.read_input()
-                if not self.cmd_hist or self.cmd_hist[-1] != cmd:
-                    self.cmd_hist.append(cmd)
-                if cmd.lower() in ("exit", "quit", "e", "q"):
+
+                if cmd.lower() in ("exit", "e"):
                     break
-                elif not cmd or cmd.startswith("\x1b"):
+                elif not cmd:
                     continue
+                elif cmd.startswith("!"):
+                    self.executor.execute_interactive_shell_cmd(cmd[1:])
                 elif cmd.startswith("cd "):
                     self.cwd, self.logical_cwd = self.executor.execute_cd_cmd(cmd)
                 else:
-                    completed_process = self.executor.execute_console_cmd(cmd)
-                    self.printer.print_subprocess_output(completed_process)
+                    cmd_name = cmd.split(" ")[0].strip()
+                    cmd_content = " ".join(cmd.split(" ")[1:])
+
+                    if cmd_name == "a":
+                        self.printer.print(f"Asking LLM: {cmd_content}")
+                        continue
+                    elif cmd_name == "c":
+                        self.printer.print(f"Generating code for question: {cmd_content}")
+                        continue
+                    elif cmd_name == "cr":
+                        self.printer.print(f"Running code review for: {cmd_content}")
+                        continue
+                    else:
+                        completed_process = self.executor.execute_shell_cmd(cmd)
+                        self.printer.print_subprocess_output(completed_process)
+                        if completed_process.returncode != 0:
+                            self.printer.print("Running AI command correction.")
             except KeyboardInterrupt:
                 self.printer.print("\n(Interrupted)")
             except Exception as e:

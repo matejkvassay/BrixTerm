@@ -5,4 +5,4 @@ TERM_INPUT_PREFIX = (
     "> "  # prompt symbol
 )
 
-INTRODUCTION_MSG = "Mini Shell - type 'exit' to quit"
+INTRODUCTION_MSG = "**** Welcome to BrixTerm! ****\nType one of ['e' / 'q' / 'exit' / 'quit'] to terminate. ;)"
