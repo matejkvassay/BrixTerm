@@ -1,6 +1,7 @@
 import getpass
 import os
 import socket
+from collections import deque
 
 from brixterm.command_executor import CommandExecutor
 from brixterm.console_context import ConsoleContext
@@ -9,11 +10,12 @@ from brixterm.constants import INTRODUCTION_MSG, TERM_INPUT_PREFIX
 
 
 class TerminalApp:
-    def __init__(self):
+    def __init__(self, max_hist=100):
         self.executor = CommandExecutor()
         self.printer = ConsolePrinter()
         self.cwd = os.getcwd()
         self.logical_cwd = os.environ.get("PWD", self.cwd)
+        self.cmd_hist = deque(maxlen=max_hist)
 
     @staticmethod
     def get_logical_cwd_name(cwd: str) -> str:
@@ -42,9 +44,11 @@ class TerminalApp:
         while True:
             try:
                 cmd = self.read_input()
+                if not self.cmd_hist or self.cmd_hist[-1] != cmd:
+                    self.cmd_hist.append(cmd)
                 if cmd.lower() in ("exit", "quit", "e", "q"):
                     break
-                elif not cmd:
+                elif not cmd or cmd.startswith("\x1b"):
                     continue
                 elif cmd.startswith("cd "):
                     self.cwd, self.logical_cwd = self.executor.execute_cd_cmd(cmd)
