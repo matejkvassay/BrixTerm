@@ -15,7 +15,8 @@ dependencies = [
     "llmbrix>=0.1.0a8",
     "rich",
     "pyperclip",
-    "textual"
+    "textual",
+    "textual-autocomplete"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
