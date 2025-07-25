@@ -6,3 +6,5 @@ TERM_INPUT_PREFIX = (
 )
 
 INTRODUCTION_MSG = "**** Welcome to BrixTerm! ****\nType one of ['e' / 'q' / 'exit' / 'quit'] to terminate. ;)"
+PHOENIX_HOST = "localhost"
+PHOENIX_PORT = "4317"

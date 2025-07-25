@@ -1,9 +1,12 @@
 from brixterm.ai import SmartTerminal
 from brixterm.command_executor import CommandExecutor
+from brixterm.configure_phoenix import configure_phoenix
 from brixterm.console_printer import ConsolePrinter
 from brixterm.terminal_app import TerminalApp
 
-GPT_MODEL = "gpt-4o-mini"
+configure_phoenix()
+
+GPT_MODEL = "gpt-4o"
 
 
 def main():

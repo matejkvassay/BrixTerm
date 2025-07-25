@@ -5,7 +5,9 @@ from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
 from llmbrix.msg import AssistantMsg, SystemMsg, UserMsg
 from llmbrix.prompt import Prompt
-from pydantic import BaseModel
+
+# from llmbrix.tools import ListDir
+from pydantic import BaseModel, Field
 
 from brixterm.command_executor import CommandExecutor
 from brixterm.console_context import ConsoleContext
@@ -44,6 +46,18 @@ USER_PROMPT = Prompt(
 
     # Additional information
 
+    ## User name
+
+        ```text
+        {{user}}
+        ```
+
+    ## Current working dir
+
+        ```text
+        {{cwd}}
+        ```
+
     ## List of files in current dir
 
         ```text
@@ -54,12 +68,22 @@ USER_PROMPT = Prompt(
 
 
 class TerminalCommand(BaseModel):
-    valid_terminal_command: str
+    explanation_for_user: str = Field(
+        ..., description="Very short 1 sentence explanation for the suggestion. Talk directly to user."
+    )
+    valid_terminal_command: str = Field(
+        ..., description="A valid Unix command string that can be directly executed in the shell"
+    )
 
 
 class SmartTerminal:
     def __init__(
-        self, gpt_model: str, command_executor: CommandExecutor, console_printer: ConsolePrinter, chat_max_turns=10
+        self,
+        gpt_model: str,
+        command_executor: CommandExecutor,
+        console_printer: ConsolePrinter,
+        max_tool_call_iter=5,
+        chat_max_turns=10,
     ):
         self.command_executor = command_executor
         self.console_printer = console_printer
@@ -67,6 +91,8 @@ class SmartTerminal:
             gpt=GptOpenAI(model=gpt_model, output_format=TerminalCommand),
             chat_history=ChatHistory(max_turns=chat_max_turns),
             system_msg=SystemMsg(content=SYS_PROMPT),
+            # tools=[ListDir()], # bug in llmbrix to be fixed
+            max_tool_call_iter=max_tool_call_iter,
         )
 
     def _run_and_print(self, cmd):
@@ -81,18 +107,21 @@ class SmartTerminal:
                 "stdout": completed_process.stdout,
                 "stderr": completed_process.stderr,
                 "return_code": completed_process.returncode,
+                "cwd": ctx.cwd,
+                "user": ctx.user,
                 "list_dir": ctx.list_dir,
             }
         )
         response = self.terminal_agent.chat(UserMsg(content=user_msg))
-        return response.content_parsed.valid_terminal_command
+        return response.content_parsed.valid_terminal_command, response.content_parsed.explanation_for_user
 
     def run(self, cmd: str, ctx: ConsoleContext):
         completed_process = self._run_and_print(cmd)
         if completed_process.returncode != 0:
-            suggested_cmd = self._suggest_command(cmd=cmd, completed_process=completed_process, ctx=ctx)
+            suggested_cmd, explanation = self._suggest_command(cmd=cmd, completed_process=completed_process, ctx=ctx)
             if suggested_cmd:
                 self.console_printer.print("\n[bold red]Command failed.[/bold red]")
+                self.console_printer.print(f"[bold green]{explanation}[/bold green]")
                 self.console_printer.print(f"Suggested fix:\n  [bold green]{suggested_cmd}[/bold green]")
                 self.console_printer.print("\n[cyan]Do you want to run the suggested command?[/cyan]")
                 user_input = input("  [y / N / feedback]: ").strip()
