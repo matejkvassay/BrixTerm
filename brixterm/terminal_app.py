@@ -1,4 +1,6 @@
+import getpass
 import os
+import socket
 
 from brixterm.command_executor import CommandExecutor
 from brixterm.console_context import ConsoleContext
@@ -23,11 +25,16 @@ class TerminalApp:
         return base
 
     def get_context(self) -> ConsoleContext:
+        venv = os.environ.get("VIRTUAL_ENV")
+        venv = f"({os.path.basename(venv)})" if venv else ""
+        user = getpass.getuser()
+        host = socket.gethostname()
         cwd_name = self.get_logical_cwd_name(self.logical_cwd)
-        return ConsoleContext(cwd=self.cwd, cwd_name=cwd_name)
+        return ConsoleContext(cwd=self.cwd, cwd_name=cwd_name, user=user, host=host, venv=venv)
 
     def read_input(self) -> str:
-        prefix = TERM_INPUT_PREFIX.format(self.get_context().cwd_name)
+        ctx = self.get_context()
+        prefix = TERM_INPUT_PREFIX.format(ctx.venv, ctx.user, ctx.host, ctx.cwd_name)
         return input(prefix).strip()
 
     def run(self):
@@ -40,7 +47,7 @@ class TerminalApp:
                 elif not cmd:
                     continue
                 elif cmd.startswith("cd "):
-                    self.cwd, self.logical_cwd = self.executor.execute_cd_command(cmd)
+                    self.cwd, self.logical_cwd = self.executor.execute_cd_cmd(cmd)
                 else:
                     completed_process = self.executor.execute_console_cmd(cmd)
                     self.printer.print_subprocess_output(completed_process)

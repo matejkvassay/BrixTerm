@@ -8,7 +8,7 @@ class CommandExecutor:
         return run(cmd, shell=True, text=True, capture_output=True)
 
     @staticmethod
-    def execute_cd_command(cmd: str) -> tuple[str, str]:
+    def execute_cd_cmd(cmd: str) -> tuple[str, str]:
         path_arg = cmd[3:].strip()
         target_path = os.path.abspath(os.path.expanduser(path_arg))
 
