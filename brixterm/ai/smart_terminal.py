@@ -12,6 +12,7 @@ from brixterm.command_executor import CommandExecutor
 from brixterm.command_history import CommandHistory
 from brixterm.console_context import ConsoleContext
 from brixterm.console_printer import ConsolePrinter
+from brixterm.constants import INTRODUCTION_MSG
 
 SYS_PROMPT = (
     "User will typed command into terminal but it failed. "
@@ -68,6 +69,12 @@ USER_PROMPT = Prompt(
         ```json
         {{cmd_hist}}
         ```
+
+    ## Terminal introduction message explaining special commands additionally available in this terminal:
+
+        ```text
+        {{intro}}
+        ```
     """
 )
 
@@ -119,6 +126,7 @@ class SmartTerminal:
                 "user": ctx.user,
                 "list_dir": ctx.list_dir,
                 "cmd_hist": ctx.cmd_hist,
+                "intro": INTRODUCTION_MSG,
             }
         )
         response = self.terminal_agent.chat(UserMsg(content=user_msg))

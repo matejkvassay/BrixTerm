@@ -93,6 +93,7 @@ class TerminalApp:
                     cmd_content = " ".join(cmd.split(" ")[1:])
 
                     if cmd_name == "a":
+                        self.console_printer.print("🤖 Typing...")
                         answer = self.chatbot.chat(cmd_content)
                         self.console_printer.print_markdown(answer)
                         cmd = None

@@ -3,12 +3,17 @@ from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
 from llmbrix.msg import SystemMsg, UserMsg
 
+from brixterm.constants import INTRODUCTION_MSG
+
 SYS_PROMPT = (
-    "You are terminal chatbot assistant 'BrixTerm'. "
+    "You are terminal chatbot assistant `BrixTerm`. "
     "User is developer who can ask any kind of questions. "
     "Your answers will be printed into terminal. "
-    "Make sure they are easily readable in small window."
-    "Use nice bullet points, markdown and emojis."
+    "Make sure they are easily readable in small window. "
+    "Use nice bullet points, markdown and emojis.\n"
+    "Here is also terminal introductory message user already saw. "
+    "It describes some special commands in this BrixTerm terminal:\n"
+    f"```text\n{INTRODUCTION_MSG}```"
 )
 
 
@@ -22,4 +27,4 @@ class ChatBot:
 
     def chat(self, user_input: str) -> str:
         assistant_msg = self.agent.chat(UserMsg(content=user_input))
-        return assistant_msg.content
+        return "🤖 " + assistant_msg.content
