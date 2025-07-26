@@ -39,7 +39,9 @@ class CodeGenerator:
             system_msg=SystemMsg(content=SYS_PROMPT),
         )
 
-    def generate_and_print(self, user_input):
+    def generate_and_print(self, user_input, clipboard=False):
+        if clipboard:
+            user_input += f"\n\nBelow is copied code for context: ```python\n{pyperclip.paste()}\n```"
         self.console_printer.print("🧠 [bold green] Got your code generation request, working... 🤖[/bold green]")
         response = self.agent.chat(UserMsg(content=user_input))
         explanation = response.content_parsed.explanation_for_user

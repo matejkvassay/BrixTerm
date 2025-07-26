@@ -98,8 +98,8 @@ class TerminalApp:
                         self.console_printer.print_markdown(answer)
                         cmd = None
                         continue
-                    elif cmd_name == "c":
-                        self.code_generator.generate_and_print(cmd_content)
+                    elif cmd_name == "c" or cmd_name == "ccc":
+                        self.code_generator.generate_and_print(cmd_content, clipboard=cmd_name == "ccc")
                         cmd = None
                         continue
                     else:

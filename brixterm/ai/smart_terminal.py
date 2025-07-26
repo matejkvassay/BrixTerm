@@ -15,8 +15,9 @@ from brixterm.console_printer import ConsolePrinter
 from brixterm.constants import INTRODUCTION_MSG
 
 SYS_PROMPT = (
-    "User will typed command into terminal but it failed. "
-    "Suggest corrected unix command that would work for the user."
+    "You are running in special unix terminal. "
+    "In this terminal user will type a command. If command is incorrect (typo, mistake) it will fail failed. "
+    "Your task is to suggest corrected unix command that would work for the user."
 )
 
 USER_PROMPT = Prompt(
