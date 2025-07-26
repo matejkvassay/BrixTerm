@@ -91,3 +91,20 @@ export AZURE_OPENAI_ENDPOINT='<ENDPOINT>'
 ```bash
 brixterm
 ```
+
+### Run options
+
+(env vars have priority over these)
+
+```bash
+brixterm --help
+usage: brixterm [-h] [--dev] [--light_mode] [--model MODEL]
+
+BrixTerm AI Terminal
+
+options:
+  -h, --help     show this help message and exit
+  --dev          (optional) Run in development mode with Arize Phoenix tracing enabled.
+  --light_mode   (optional) Optimize looks for light mode terminal (dark is default).
+  --model MODEL  (optional) Specify GPT model. (default='gpt-4o-mini')
+```
