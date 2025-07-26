@@ -47,7 +47,7 @@ def main():
         code_generator=code_generator,
         command_history=cmd_hist,
     )
-    printer.print(f"Starting BrixTerm with GPT model: {gpt_model}")
+    printer.print(f"\n🚀 [cyan]... Starting BrixTerm with GPT model:[/cyan] [red]💣 {gpt_model} 💣[/red]... 🚀")
     app.run()
 
 
