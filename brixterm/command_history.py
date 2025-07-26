@@ -16,7 +16,7 @@ class CommandHistory:
             {
                 "args": proc.args,
                 "returncode": proc.returncode,
-                "stdout": proc.stdout[: self.text_trim] if proc.stdout else proc.stout,
+                "stdout": proc.stdout[: self.text_trim] if proc.stdout else proc.stdout,
                 "stderr": proc.stderr[: self.text_trim] if proc.stderr else proc.stderr,
             }
             for proc in self.hist

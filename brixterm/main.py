@@ -1,7 +1,14 @@
 # flake8: noqa: E402
-from llmbrix.tracing import configure_arize_tracing
+import argparse
 
-configure_arize_tracing(project_name="BrixTerm")
+parser = argparse.ArgumentParser(description="BrixTerm AI Terminal")
+parser.add_argument("--dev", action="store_true", help="Enable Arize tracing")
+args = parser.parse_args()
+
+if args.dev:
+    from llmbrix.tracing import configure_arize_tracing
+
+    configure_arize_tracing(project_name="BrixTerm")
 
 from brixterm.ai import ChatBot, CodeGenerator, SmartTerminal
 from brixterm.command_executor import CommandExecutor

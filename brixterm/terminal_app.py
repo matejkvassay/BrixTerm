@@ -101,15 +101,8 @@ class TerminalApp:
                         self.code_generator.generate_and_print(cmd_content)
                         cmd = None
                         continue
-                    elif cmd_name == "review":
-                        self.console_printer.print("TBD.")
-                        cmd = None
-                        continue
                     else:
                         cmd = self.smart_terminal.run(cmd, ctx)
             except KeyboardInterrupt:
                 self.console_printer.print("\n(Interrupted)")
-                cmd = None
-            except Exception as e:
-                self.console_printer.print(f"Error: {e}")
                 cmd = None
