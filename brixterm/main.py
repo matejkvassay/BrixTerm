@@ -1,5 +1,6 @@
 # flake8: noqa: E402
 import argparse
+import os
 
 from brixterm.constants import CHAT_HIST_SIZE, CMD_HIST_SIZE, DEFAULT_GPT_MODEL
 
@@ -24,6 +25,8 @@ from brixterm.console_printer import ConsolePrinter
 from brixterm.terminal_app import TerminalApp
 
 gpt_model = args.model
+if os.getenv("BRIXTERM_MODEL"):
+    gpt_model = os.getenv("BRIXTERM_MODEL")
 
 
 def main():

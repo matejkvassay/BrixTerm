@@ -14,9 +14,7 @@ requires-python = ">=3.11"
 dependencies = [
     "llmbrix>=0.1.0a10",
     "rich",
-    "pyperclip",
-    "textual",
-    "textual-autocomplete"
+    "pyperclip"
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
