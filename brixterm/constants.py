@@ -10,14 +10,15 @@ TERM_INPUT_PREFIX = (
 )
 
 INTRODUCTION_MSG = (
-    "\n\n[bold red]**** Welcome to BrixTerm! ****[/bold red]\n\n[bold blue]AVAILABLE COMMANDS:[/bold blue]\n\n"
-    "[bold yellow]TERMINAL[/bold yellow] [bold yellow](default)[/bold yellow] - Type any "
+    "\n\n[bold red]**** Welcome to BrixTerm! ****[/bold red]\n\n[bold blue]Available commands:[/bold blue]\n\n"
+    "[bold yellow]1. TERMINAL[/bold yellow] [bold yellow](default)[/bold yellow] - Type any "
     "[bold yellow]terminal command[/bold yellow]. If it fails then AI will suggest corrected version.\n"
-    "[bold cyan]INTERACTIVE SHELL[/bold cyan] - Type [bold cyan]!<command>[/bold cyan] to run interactive shell. "
+    "[bold cyan]2. INTERACTIVE SHELL[/bold cyan] - Type [bold cyan]!<command>[/bold cyan] to run interactive shell. "
     "Without [bold cyan]![/bold cyan] interactive commands will timeout after 10s. E.g. try to run [bold cyan]!htop[/bold cyan]\n"
-    "[bold green]CODE GEN[/bold green] - Type [bold green]c <your msg>[/bold green] to generate Python code and copy to clipboard.\n"
-    "[bold blue]ANSWER[/bold blue] - Type [bold blue]a <your msg>[/bold blue] to talk to LLM chatbot.\n"
-    "[bold purple]EXIT[/bold purple] - Type [bold purple]q[/bold purple] to exit.\n"
+    "[bold green]3. CODE GEN[/bold green] - Type [bold green]c <your request>[/bold green] to generate Python code. "
+    "It's automatically copied to your clipboard.\n"
+    "[bold blue]4. ANSWER[/bold blue] - Type [bold blue]a <your request>[/bold blue] to chat with GPT.\n"
+    "[bold purple]5. EXIT[/bold purple] - Type [bold purple]q[/bold purple] to exit.\n\n"
 )
 PHOENIX_HOST = "localhost"
 PHOENIX_PORT = "4317"
