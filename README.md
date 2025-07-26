@@ -1,12 +1,64 @@
-# BrixTerm by LLMBrix
+# BrixTerm
 
 ## About
 
-Simple terminal app with OpenAI GPT assistance built in.
+**BrixTerm** is a simple terminal app that integrates GPT to assist with everyday development tasks.
 
-- automatically suggests fixes in unix commands if failed
-- generates Python code in terminal and copies it into clipboard
-- enables chat with GPT directly in terminal
+---
+
+## Features
+
+- Automatically suggests fixes for failed Unix commands
+- Generates Python code and copies it directly to your clipboard
+- Built-in chatbot accessible inside the terminal
+
+> **Note:** This tool is **not fully agentic** — developers maintain control by using pre-defined commands.
+
+---
+
+## Available Commands
+
+### 1. TERMINAL (default)
+
+Type any terminal command.
+If it fails, the AI will suggest a corrected version.
+
+---
+
+### 2. INTERACTIVE SHELL
+
+Use `!<command>` to run an interactive shell command.
+Without the `!`, interactive commands timeout after 10 seconds.
+**Example:** `!htop`
+
+---
+
+### 3. CODE GEN
+
+Use `c <your request>` to generate Python code.
+The result is automatically copied to your clipboard.
+
+---
+
+### 4. CODE GEN + CLIPBOARD
+
+Use `ccc <your request>` to generate Python code.
+The content of your clipboard is passed to the AI as context.
+The result is copied back to your clipboard.
+
+---
+
+### 5. ANSWER
+
+Use `a <your request>` to chat with GPT.
+
+---
+
+### 6. EXIT
+
+Use `q` to exit the application.
+_____________________________________________________________________
+Powered by *LLMBrix* library: https://github.com/matejkvassay/LLMBrix
 
 ## Usage guide
 

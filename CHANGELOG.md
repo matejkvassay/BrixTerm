@@ -1,8 +1,9 @@
-[2025/06/12]
-- initial implementation and package structure
-- AI terminal, chat and code generator features
-- interactive session support
-- working command history
-- completions with TAB
-- scripts to manage licenses and release
-- third party license mentions
+[2025/07/26]
+- initial implementation
+- terminal with special commands
+- rich formatting and console printing
+- code generation
+- chat
+- smart error fixing terminal
+- configuration
+- arize integration
