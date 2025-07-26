@@ -77,6 +77,9 @@ export OPENAI_API_KEY='<TOKEN>'
 # (optional) GPT model to be used, default is `gpt-4o-mini`
 export BRIXTERM_MODEL='gpt-4o'
 
+# (optional) Optimize colors for light mode (dark is default)
+export BRIXTERM_COLOR_MODE='light'
+
 # (ALTERNATIVELY) API access for Azure AI is also supported
 export AZURE_OPENAI_API_KEY='<TOKEN>'
 export AZURE_OPENAI_API_VERSION='<VERSION>'
@@ -87,4 +90,21 @@ export AZURE_OPENAI_ENDPOINT='<ENDPOINT>'
 
 ```bash
 brixterm
+```
+
+### Run options
+
+(env vars have priority over these)
+
+```bash
+brixterm --help
+usage: brixterm [-h] [--dev] [--light_mode] [--model MODEL]
+
+BrixTerm AI Terminal
+
+options:
+  -h, --help     show this help message and exit
+  --dev          (optional) Run in development mode with Arize Phoenix tracing enabled.
+  --light_mode   (optional) Optimize looks for light mode terminal (dark is default).
+  --model MODEL  (optional) Specify GPT model. (default='gpt-4o-mini')
 ```

@@ -6,14 +6,16 @@ from rich.syntax import Syntax
 
 
 class ConsolePrinter:
-    def __init__(self):
+    def __init__(self, dark_mode=True):
+        self.dark_mode = dark_mode
         self.console = Console(color_system="truecolor")
 
     def print(self, content: str | Markdown):
         self.console.print(content)
 
     def print_python(self, content: str):
-        syntax = Syntax(content, "python", line_numbers=True, theme="monokai", indent_guides=True)
+        theme = "monokai" if self.dark_mode else "friendly"
+        syntax = Syntax(content, "python", line_numbers=True, theme=theme, indent_guides=True)
         self.console.print(syntax)
 
     def print_markdown(self, content: str):

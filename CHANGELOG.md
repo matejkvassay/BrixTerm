@@ -7,3 +7,4 @@
 - smart error fixing terminal
 - configuration
 - arize integration
+- optimization for light color mode
