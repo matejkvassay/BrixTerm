@@ -7,13 +7,12 @@ name = "brix-term"
 authors = [
     { name = "Matej Kvassay", email = "matejkvassay5@gmail.com" }
 ]
-description = "AI powered terminal for Python developers."
-version = "0.1.0a1"
+description = "GPT powered terminal for Python developers."
+version = "0.1.0"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "llmbrix>=0.1.0a8",
-    "prompt-toolkit",
+    "llmbrix>=0.1.0a10",
     "rich",
     "pyperclip"
 ]
