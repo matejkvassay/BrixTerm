@@ -74,7 +74,7 @@ USER_PROMPT = Prompt(
 
 class TerminalCommand(BaseModel):
     explanation_for_user: str = Field(
-        ..., description="Very short 1 sentence explanation for the suggestion. Talk directly to user."
+        ..., description="Very short 1 sentence explanation for the suggestion. Talk directly to user. Include emojis."
     )
     valid_terminal_command: str = Field(
         ..., description="A valid Unix command string that can be directly executed in the shell"
@@ -129,11 +129,15 @@ class SmartTerminal:
         if completed_process.returncode != 0:
             suggested_cmd, explanation = self._suggest_command(cmd=cmd, completed_process=completed_process, ctx=ctx)
             if suggested_cmd:
-                self.console_printer.print("\n[bold red]Command failed.[/bold red]")
-                self.console_printer.print(f"[bold green]{explanation}[/bold green]")
-                self.console_printer.print(f"Suggested fix:\n  [bold green]{suggested_cmd}[/bold green]")
-                self.console_printer.print("\n[cyan]Do you want to run the suggested command?[/cyan]")
-                user_input = input("  [y / N / feedback]: ").strip()
+                self.console_printer.print("\n⚠️ [bold red]Command failed.[/bold red]")
+                self.console_printer.print(f"💡 [bold green]{explanation}[/bold green]")
+                self.console_printer.print(
+                    f"🧠 [bold blue]Suggested fix:[/bold blue]\n  [bold red]{suggested_cmd}[/bold red]"
+                )
+                self.console_printer.print(
+                    "\n[cyan]Do you want to run the[/cyan] [bold red]suggested command?[/bold red]"
+                )
+                user_input = input("  [y ✅  / N ❌ /  💬 feedback]: ").strip()
 
                 if user_input.strip().lower() == "y":
                     return suggested_cmd
