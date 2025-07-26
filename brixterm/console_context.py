@@ -9,3 +9,4 @@ class ConsoleContext:
     user: str
     host: str
     list_dir: str
+    cmd_hist: str

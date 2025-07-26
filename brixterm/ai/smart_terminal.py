@@ -3,13 +3,13 @@ from subprocess import CompletedProcess
 from llmbrix.agent import Agent
 from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
-from llmbrix.msg import AssistantMsg, SystemMsg, UserMsg
+from llmbrix.msg import SystemMsg, UserMsg
 from llmbrix.prompt import Prompt
-
-# from llmbrix.tools import ListDir
+from llmbrix.tools import ListDir
 from pydantic import BaseModel, Field
 
 from brixterm.command_executor import CommandExecutor
+from brixterm.command_history import CommandHistory
 from brixterm.console_context import ConsoleContext
 from brixterm.console_printer import ConsolePrinter
 
@@ -63,6 +63,11 @@ USER_PROMPT = Prompt(
         ```text
         {{list_dir}}
         ```
+    ## History of commands user ran so far
+
+        ```json
+        {{cmd_hist}}
+        ```
     """
 )
 
@@ -82,22 +87,25 @@ class SmartTerminal:
         gpt_model: str,
         command_executor: CommandExecutor,
         console_printer: ConsolePrinter,
+        command_history: CommandHistory,
         max_tool_call_iter=5,
         chat_max_turns=10,
     ):
         self.command_executor = command_executor
         self.console_printer = console_printer
+        self.command_history = command_history
         self.terminal_agent = Agent(
             gpt=GptOpenAI(model=gpt_model, output_format=TerminalCommand),
             chat_history=ChatHistory(max_turns=chat_max_turns),
             system_msg=SystemMsg(content=SYS_PROMPT),
-            # tools=[ListDir()], # bug in llmbrix to be fixed
+            tools=[ListDir()],
             max_tool_call_iter=max_tool_call_iter,
         )
 
     def _run_and_print(self, cmd):
         completed_process = self.command_executor.execute_shell_cmd(cmd)
         self.console_printer.print_subprocess_output(completed_process)
+        self.command_history.add(completed_process)
         return completed_process
 
     def _suggest_command(self, cmd: str, completed_process: CompletedProcess, ctx: ConsoleContext):
@@ -110,6 +118,7 @@ class SmartTerminal:
                 "cwd": ctx.cwd,
                 "user": ctx.user,
                 "list_dir": ctx.list_dir,
+                "cmd_hist": ctx.cmd_hist,
             }
         )
         response = self.terminal_agent.chat(UserMsg(content=user_msg))
@@ -130,18 +139,3 @@ class SmartTerminal:
                     return suggested_cmd
                 elif user_input.strip().lower() != "n":
                     return user_input
-        else:
-            self.record_successful_cmd(cmd, completed_process)
-
-    def record_successful_cmd(self, cmd, completed_process: CompletedProcess = None):
-        if not completed_process:
-            completed_process = CompletedProcess(args=[], returncode=0)
-
-        msg = AssistantMsg(
-            content=f'Successfully ran command: "{cmd}"\n\n'
-            f"\n Command output: "
-            f"\n Return code: \n{completed_process.returncode}\n\n"
-            f"\n Stdout: \n{completed_process.stdout}\n\n"
-            f"\n Stderr: \n{completed_process.stderr}\n\n"
-        )
-        self.terminal_agent.chat_history.add(msg)
