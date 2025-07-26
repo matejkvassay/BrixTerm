@@ -1,5 +1,7 @@
 # flake8: noqa: E501
-
+DEFAULT_GPT_MODEL = "gpt-4o-mini"
+CMD_HIST_SIZE = 10
+CHAT_HIST_SIZE = 10
 TERM_INPUT_PREFIX = (
     "\033[1;32m{}\033[0m "  # venv: bright green
     "\033[1;36m{}@{}\033[0m "  # user@host: cyan
