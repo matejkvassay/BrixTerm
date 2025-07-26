@@ -77,6 +77,9 @@ export OPENAI_API_KEY='<TOKEN>'
 # (optional) GPT model to be used, default is `gpt-4o-mini`
 export BRIXTERM_MODEL='gpt-4o'
 
+# (optional) Optimize colors for light mode (dark is default)
+export BRIXTERM_COLOR_MODE='light'
+
 # (ALTERNATIVELY) API access for Azure AI is also supported
 export AZURE_OPENAI_API_KEY='<TOKEN>'
 export AZURE_OPENAI_API_VERSION='<VERSION>'
