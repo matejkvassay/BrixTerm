@@ -2,6 +2,7 @@ from subprocess import CompletedProcess
 
 from rich.console import Console
 from rich.markdown import Markdown
+from rich.syntax import Syntax
 
 
 class ConsolePrinter:
@@ -10,6 +11,10 @@ class ConsolePrinter:
 
     def print(self, content: str | Markdown):
         self.console.print(content)
+
+    def print_python(self, content: str):
+        syntax = Syntax(content, "python", line_numbers=True, theme="monokai", indent_guides=True)
+        self.console.print(syntax)
 
     def print_markdown(self, content: str):
         markdown = Markdown(content)

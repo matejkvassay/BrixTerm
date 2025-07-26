@@ -4,7 +4,7 @@ import readline  # noqa: F401
 import socket
 from subprocess import CompletedProcess
 
-from brixterm.ai import SmartTerminal
+from brixterm.ai import ChatBot, CodeGenerator, SmartTerminal
 from brixterm.command_executor import CommandExecutor
 from brixterm.command_history import CommandHistory
 from brixterm.console_context import ConsoleContext
@@ -18,9 +18,13 @@ class TerminalApp:
         console_printer: ConsolePrinter,
         command_executor: CommandExecutor,
         smart_terminal: SmartTerminal,
+        chatbot: ChatBot,
+        code_generator: CodeGenerator,
         command_history: CommandHistory,
     ):
         self.smart_terminal = smart_terminal
+        self.chatbot = chatbot
+        self.code_generator = code_generator
         self.console_printer = console_printer
         self.command_executor = command_executor
         self.cwd = os.getcwd()
@@ -89,15 +93,16 @@ class TerminalApp:
                     cmd_content = " ".join(cmd.split(" ")[1:])
 
                     if cmd_name == "a":
-                        self.console_printer.print(f"Asking LLM: {cmd_content}")
+                        answer = self.chatbot.chat(cmd_content)
+                        self.console_printer.print_markdown(answer)
                         cmd = None
                         continue
                     elif cmd_name == "c":
-                        self.console_printer.print(f"Generating code for question: {cmd_content}")
+                        self.code_generator.generate_and_print(cmd_content)
                         cmd = None
                         continue
-                    elif cmd_name == "cr":
-                        self.console_printer.print(f"Running code review for: {cmd_content}")
+                    elif cmd_name == "review":
+                        self.console_printer.print("TBD.")
                         cmd = None
                         continue
                     else:
