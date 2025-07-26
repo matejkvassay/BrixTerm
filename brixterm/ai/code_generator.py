@@ -40,14 +40,19 @@ class CodeGenerator:
         )
 
     def generate_and_print(self, user_input, clipboard=False):
+        clipboard_mention = ", "
         if clipboard:
             user_input += f"\n\nBelow is copied code for context: ```python\n{pyperclip.paste()}\n```"
-        self.console_printer.print("🧠 [bold green] Got your code generation request, working... 🤖[/bold green]")
+            clipboard_mention = " with code from clipboard, "
+
+        self.console_printer.print(
+            f"🧠 [bold green] Got your code generation request{clipboard_mention}working... 🤖[/bold green]"
+        )
         response = self.agent.chat(UserMsg(content=user_input))
         explanation = response.content_parsed.explanation_for_user
         code = response.content_parsed.generated_python_code
         pyperclip.copy(code)
         self.console_printer.print("🧠 [bold green] Code generation request completed.[/bold green]")
-        self.console_printer.print(f"🔍 🤖 [bold red]{explanation}[/bold red] 🤖")
         self.console_printer.print_python(code)
+        self.console_printer.print(f"🔍 🤖 [bold red]{explanation}[/bold red] 🤖")
         self.console_printer.print("✅️ [grey]Copied to clipboard... 🤖[/grey]")
