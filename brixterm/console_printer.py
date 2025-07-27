@@ -8,7 +8,7 @@ from rich.syntax import Syntax
 class ConsolePrinter:
     def __init__(self, dark_mode=True):
         self.dark_mode = dark_mode
-        self.console = Console(color_system="truecolor")
+        self.console = Console()
 
     def print(self, content: str | Markdown):
         self.console.print(content)
