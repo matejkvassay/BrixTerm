@@ -56,7 +56,7 @@ class TerminalApp:
 
     def read_input(self) -> tuple[str, ConsoleContext]:
         ctx = self.get_context()
-        content = TERM_INPUT_PREFIX.format(ctx.venv, ctx.user, ctx.host, ctx.cwd_name)
+        content = TERM_INPUT_PREFIX.format(ctx.venv, ctx.cwd_name)
         cmd = input(content).strip()
         return cmd, ctx
 
