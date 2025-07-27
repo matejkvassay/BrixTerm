@@ -1,3 +1,4 @@
+import pyperclip
 from llmbrix.agent import Agent
 from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
@@ -25,6 +26,8 @@ class ChatBot:
             system_msg=SystemMsg(content=SYS_PROMPT),
         )
 
-    def chat(self, user_input: str) -> str:
+    def chat(self, user_input: str, clipboard=False) -> str:
+        if clipboard:
+            user_input += f"\n\nBelow is copy of relevant context from my clipboard:\n\n{pyperclip.paste()}"
         assistant_msg = self.agent.chat(UserMsg(content=user_input))
-        return "🤖 " + assistant_msg.content
+        return "🤖💬 " + assistant_msg.content
