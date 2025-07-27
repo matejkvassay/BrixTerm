@@ -3,6 +3,7 @@
 ## About
 
 **BrixTerm** is a simple terminal app that integrates GPT to assist with everyday development tasks.
+> Powered by **LLMBrix** framework: https://github.com/matejkvassay/LLMBrix
 
 ---
 
@@ -36,29 +37,39 @@ Without the `!`, interactive commands timeout after 10 seconds.
 ### 3. CODE GEN
 
 Use `c <your request>` to generate Python code.
-The result is automatically copied to your clipboard.
+The generated code is automatically copied to your clipboard.
 
 ---
 
 ### 4. CODE GEN + CLIPBOARD
 
 Use `ccc <your request>` to generate Python code.
-The content of your clipboard is passed to the AI as context.
-The result is copied back to your clipboard.
+The content of your clipboard is automatically passed to the code generator prompt.
+The generated code is copied back to your clipboard.
 
 ---
 
-### 5. ANSWER
+### 5. CHAT ANSWER
 
 Use `a <your request>` to chat with GPT.
 
 ---
 
-### 6. EXIT
+### 6. CHAT ANSWER + CLIPBOARD
+
+Use `aaa <your request>` to chat with GPT.
+The content of your clipboard is automatically passed to the AI chatbot prompt.
+
+---
+
+### 7. EXIT
 
 Use `q` to exit the application.
-_____________________________________________________________________
-Powered by *LLMBrix* library: https://github.com/matejkvassay/LLMBrix
+
+---
+
+> Note: All GPT powered commands also maintain chat history and remember your previous requests.
+___
 
 ## Usage guide
 
@@ -96,7 +107,8 @@ brixterm
 
 > **Note:** env vars have priority over run arguments
 
-> **Note:** `--light_mode` is enabled in minimal way however dark terminal and dark mode is recommended for better visibility.
+> **Note:** `--light_mode` is enabled in minimal way however dark terminal and dark mode is recommended for better
+> visibility.
 
 ```bash
 brixterm --help
