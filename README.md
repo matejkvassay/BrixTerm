@@ -1,4 +1,4 @@
-# BrixTerm
+![Brixterm Logo](img/logo.png)
 
 ## About
 
