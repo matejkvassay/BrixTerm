@@ -14,7 +14,7 @@ class ConsolePrinter:
         self.console.print(content)
 
     def print_python(self, content: str):
-        theme = "monokai" if self.dark_mode else "friendly"
+        theme = "monokai" if self.dark_mode else "xcode"
         syntax = Syntax(content, "python", line_numbers=True, theme=theme, indent_guides=True)
         self.console.print(syntax)
 
