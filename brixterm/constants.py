@@ -19,8 +19,10 @@ INTRODUCTION_MSG = (
     "Result is automatically copied to your clipboard.\n"
     "[bold bright_green]4. 👶 CODE GEN + CLIPBOARD[/bold bright_green] - Type [bold bright_green]ccc <your request>[/bold bright_green] to generate Python code. "
     "Content of your clipboard is automatically passed to AI generator as context. Result is automatically copied back to your clipboard.\n"
-    "[bold blue]5. 🔮 ANSWER[/bold blue] - Type [bold blue]a <your request>[/bold blue] to chat with GPT.\n"
-    "[bold purple]6. 🏃💨️ EXIT[/bold purple] - Type [bold purple]q[/bold purple] to exit.\n\n"
+    "[bold blue]5. 💬 CHAT[/bold blue] - Type [bold blue]a <your request>[/bold blue] to chat with GPT.\n"
+    "[bold bright_blue]6. 🔮 CHAT + CLIPBOARD[/bold bright_blue] - Type [bold bright_blue]aaa <your request>[/bold bright_blue] to chat with GPT. "
+    "Content of your clipboard is automatically pasted to the chatbot prompt as a context.\n"
+    "[bold purple]7. 🏃💨️ EXIT[/bold purple] - Type [bold purple]q[/bold purple] to exit.\n\n"
 )
 PHOENIX_HOST = "localhost"
 PHOENIX_PORT = "4317"
