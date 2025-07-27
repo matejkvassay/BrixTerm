@@ -77,7 +77,7 @@ export OPENAI_API_KEY='<TOKEN>'
 # (optional) GPT model to be used, default is `gpt-4o-mini`
 export BRIXTERM_MODEL='gpt-4o'
 
-# (optional) Optimize colors for light mode (dark is default)
+# (optional) Optimize colors for light mode (dark is default, light support is limited, not recommended)
 export BRIXTERM_COLOR_MODE='light'
 
 # (ALTERNATIVELY) API access for Azure AI is also supported
@@ -94,7 +94,9 @@ brixterm
 
 ### Run options
 
-(env vars have priority over these)
+> **Note:** env vars have priority over run arguments
+
+> **Note:** `--light_mode` is enabled in minimal way however dark terminal and dark mode is recommended for better visibility.
 
 ```bash
 brixterm --help
