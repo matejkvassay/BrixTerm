@@ -17,6 +17,12 @@ parser.add_argument(
 parser.add_argument(
     "--model", help=f"(optional) Specify GPT model. (default='{DEFAULT_GPT_MODEL}')", default=DEFAULT_GPT_MODEL
 )
+parser.add_argument(
+    "--azure",
+    help=f"(optional) Default to Azure. "
+    f"Use to enforce Azure OpenAI API in case both public and Azure OpenAI env vars are set.",
+    action="store_true",
+)
 args = parser.parse_args()
 
 if args.dev:
@@ -47,7 +53,10 @@ if color_mode_var == "light":
 if os.getenv("BRIXTERM_MODEL"):
     gpt_model = os.getenv("BRIXTERM_MODEL")
 
-if os.getenv("OPENAI_API_KEY"):
+if args.azure:
+    if not os.getenv("AZURE_OPENAI_API_KEY"):
+        raise ValueError("If --azure, then azure OpenAI API configuration env vars must be set as well, see README.")
+if (os.getenv("OPENAI_API_KEY")) and (not args.azure):
     logger.info(f"Starting BrixTerm with public OpenAI API configured. Model: {gpt_model}")
     gpt = GptOpenAI.from_openai(model=gpt_model, api_key=os.getenv("OPENAI_API_KEY"))
 elif os.getenv("AZURE_OPENAI_API_KEY"):
@@ -60,7 +69,7 @@ elif os.getenv("AZURE_OPENAI_API_KEY"):
         azure_deployment=os.getenv("AZURE_OPENAI_DEPLOYMENT"),
     )
 else:
-    raise ValueError("OpenAI API configuration env vars not set, see README.md for list of env vars to set.")
+    raise ValueError("No OpenAI API configuration env vars set. See README.md for list of env vars to set.")
 
 
 def main():

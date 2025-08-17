@@ -123,7 +123,7 @@ brixterm
 
 ```bash
 brixterm --help
-usage: brixterm [-h] [--dev] [--light_mode] [--model MODEL]
+usage: brixterm [-h] [--dev] [--light_mode] [--model MODEL] [--azure]
 
 BrixTerm AI Terminal
 
@@ -132,4 +132,6 @@ options:
   --dev          (optional) Run in development mode with Arize Phoenix tracing enabled.
   --light_mode   (optional) Optimize looks for light mode terminal (dark is default).
   --model MODEL  (optional) Specify GPT model. (default='gpt-4o-mini')
+  --azure        (optional) Default to Azure. Use to enforce Azure OpenAI API in case both public and Azure OpenAI env vars are set.
+
 ```
