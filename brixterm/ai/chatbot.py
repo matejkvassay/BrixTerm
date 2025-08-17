@@ -3,11 +3,13 @@ from llmbrix.agent import Agent
 from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
 from llmbrix.msg import SystemMsg, UserMsg
+from llmbrix.prompt import Prompt
 
 from brixterm.ai.tools import PasteToClipboard
 
-SYS_PROMPT = (
+SYS_PROMPT = Prompt(
     "You are terminal chatbot assistant `BrixTerm`. \n\n"
+    "You internally use following AI model: '{{model}}'. "
     "User is developer who can ask any kind of questions. "
     "Your answers will be printed into terminal. "
     "Make sure they are easily readable in small window. "
@@ -24,7 +26,7 @@ class ChatBot:
         self.agent = Agent(
             gpt=gpt,
             chat_history=ChatHistory(max_turns=chat_hist_size),
-            system_msg=SystemMsg(content=SYS_PROMPT),
+            system_msg=SystemMsg(content=SYS_PROMPT.render({"model": gpt.model})),
             tools=[PasteToClipboard()],
         )
 
