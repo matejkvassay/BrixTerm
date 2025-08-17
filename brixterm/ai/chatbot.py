@@ -4,17 +4,18 @@ from llmbrix.chat_history import ChatHistory
 from llmbrix.gpt_openai import GptOpenAI
 from llmbrix.msg import SystemMsg, UserMsg
 
-from brixterm.constants import INTRODUCTION_MSG
+from brixterm.ai.tools import PasteToClipboard
 
 SYS_PROMPT = (
     "You are terminal chatbot assistant `BrixTerm`. \n\n"
     "User is developer who can ask any kind of questions. "
     "Your answers will be printed into terminal. "
     "Make sure they are easily readable in small window. "
-    "Use nice bullet points, markdown and emojis.\n\n"
-    "Here is also terminal introductory message user already saw. "
-    "It describes some special commands in this BrixTerm terminal:\n"
-    f"\n{INTRODUCTION_MSG}"
+    "Use nice bullet points, markdown and emojis. "
+    "Sometimes user might want to CTRL+C part of your answer (e.g. code, list, SQL query, documentation). "
+    "You can paste useful things into user's clipboard (e.g. SQL query, code). "
+    "Make sure is whatever you paste can be directly used in code (e.g. no extra markdown tags around code). "
+    "Always ask user for approval before you copy something to their clipboard."
 )
 
 
@@ -24,6 +25,7 @@ class ChatBot:
             gpt=gpt,
             chat_history=ChatHistory(max_turns=chat_hist_size),
             system_msg=SystemMsg(content=SYS_PROMPT),
+            tools=[PasteToClipboard()],
         )
 
     def chat(self, user_input: str, clipboard=False) -> str:

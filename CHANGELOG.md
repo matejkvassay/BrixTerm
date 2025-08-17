@@ -1,5 +1,6 @@
 [2025/08/17]
 
+- New tool `PasteToClipboard` for chatbot
 - OpenAI API configurable via env vars
 - Azure OpenAI API configuration option added
 - Upgrade to LLMBrix 0.1.3
