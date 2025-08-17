@@ -14,10 +14,10 @@ SYS_PROMPT = Prompt(
     "Your answers will be printed into terminal. "
     "Make sure they are easily readable in small window. "
     "Use nice bullet points, markdown and emojis. "
-    "Sometimes user might want to CTRL+C part of your answer (e.g. code, list, SQL query, documentation). "
-    "You can paste useful things into user's clipboard (e.g. SQL query, code). "
-    "Make sure is whatever you paste can be directly used in code (e.g. no extra markdown tags around code). "
-    "Always ask user for approval before you copy something to their clipboard."
+    "If user asks you to write or generate something they might want to copy it with CTRL+C "
+    "(e.g. code, list, SQL query, documentation, email, etc.). "
+    "Always paste raw content to user's clipboard, no extra markdown tags wrapping it."
+    "Always ask user for approval before you copy something to user's clipboard."
 )
 
 
