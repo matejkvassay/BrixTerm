@@ -81,20 +81,31 @@ pip install brix-term
 
 ### Configure
 
+#### Public OpenAI API configuration
+
 ```bash
 # Configure OpenAI API access
 export OPENAI_API_KEY='<TOKEN>'
+```
 
-# (optional) GPT model to be used, default is `gpt-4o-mini`
-export BRIXTERM_MODEL='gpt-4o'
+#### (alternative) Azure OpenAI API configuration
 
-# (optional) Optimize colors for light mode (dark is default, light support is limited, not recommended)
-export BRIXTERM_COLOR_MODE='light'
-
+```bash
 # (ALTERNATIVELY) API access for Azure AI is also supported
 export AZURE_OPENAI_API_KEY='<TOKEN>'
 export AZURE_OPENAI_API_VERSION='<VERSION>'
 export AZURE_OPENAI_ENDPOINT='<ENDPOINT>'
+export AZURE_DEPLOYMENT='<DEPLOYMENT>'
+```
+
+#### BrixTerm settings
+
+```bash
+# (optional) GPT model to be used, default is `gpt-5-mini`
+export BRIXTERM_MODEL='gpt-5-mini'
+
+# (optional) Optimize colors for light mode (dark is default, light support is limited, not recommended)
+export BRIXTERM_COLOR_MODE='light'
 ```
 
 ### Run

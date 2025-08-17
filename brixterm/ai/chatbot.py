@@ -19,9 +19,9 @@ SYS_PROMPT = (
 
 
 class ChatBot:
-    def __init__(self, gpt_model: str, chat_hist_size: int = 10):
+    def __init__(self, gpt: GptOpenAI, chat_hist_size: int = 10):
         self.agent = Agent(
-            gpt=GptOpenAI(model=gpt_model),
+            gpt=gpt,
             chat_history=ChatHistory(max_turns=chat_hist_size),
             system_msg=SystemMsg(content=SYS_PROMPT),
         )

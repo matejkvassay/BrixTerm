@@ -81,10 +81,10 @@ USER_PROMPT = Prompt(
 
 
 class TerminalCommand(BaseModel):
-    explanation_for_user: str = Field(
+    explanation: str = Field(
         ..., description="Very short 1 sentence explanation for the suggestion. Talk directly to user. Include emojis."
     )
-    valid_terminal_command: str = Field(
+    terminal_command: str = Field(
         ..., description="A valid Unix command string that can be directly executed in the shell"
     )
 
@@ -92,7 +92,7 @@ class TerminalCommand(BaseModel):
 class SmartTerminal:
     def __init__(
         self,
-        gpt_model: str,
+        gpt: GptOpenAI,
         command_executor: CommandExecutor,
         console_printer: ConsolePrinter,
         command_history: CommandHistory,
@@ -103,10 +103,11 @@ class SmartTerminal:
         self.console_printer = console_printer
         self.command_history = command_history
         self.terminal_agent = Agent(
-            gpt=GptOpenAI(model=gpt_model, output_format=TerminalCommand),
+            gpt=gpt,
             chat_history=ChatHistory(max_turns=chat_max_turns),
             system_msg=SystemMsg(content=SYS_PROMPT),
             tools=[ListDir()],
+            output_format=TerminalCommand,
             max_tool_call_iter=max_tool_call_iter,
         )
 
@@ -131,7 +132,7 @@ class SmartTerminal:
             }
         )
         response = self.terminal_agent.chat(UserMsg(content=user_msg))
-        return response.content_parsed.valid_terminal_command, response.content_parsed.explanation_for_user
+        return response.content_parsed.terminal_command, response.content_parsed.explanation
 
     def run(self, cmd: str, ctx: ConsoleContext):
         completed_process = self._run_and_print(cmd)
