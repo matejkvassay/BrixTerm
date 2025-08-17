@@ -4,6 +4,7 @@
 - OpenAI API configurable via env vars
 - Azure OpenAI API configuration option added
 - Upgrade to LLMBrix 0.1.3
+- Pre-commit config improvements
 
 [2025/07/27]
 
