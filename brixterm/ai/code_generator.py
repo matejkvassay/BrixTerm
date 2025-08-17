@@ -15,10 +15,10 @@ SYS_PROMPT = (
 
 
 class GeneratedPythonCode(BaseModel):
-    explanation_for_user: str = Field(
+    explanation: str = Field(
         ..., description="Short explanation how you understood user's task and what is the generated code doing."
     )
-    generated_python_code: str = Field(
+    python_code: str = Field(
         ...,
         description="Piece of valid python code solving user's request. "
         "It will be directly copied into .py file for execution.",
@@ -28,15 +28,16 @@ class GeneratedPythonCode(BaseModel):
 class CodeGenerator:
     def __init__(
         self,
-        gpt_model: str,
+        gpt: GptOpenAI,
         console_printer: ConsolePrinter,
         chat_hist_size=10,
     ):
         self.console_printer = console_printer
         self.agent = Agent(
-            gpt=GptOpenAI(model=gpt_model, output_format=GeneratedPythonCode),
+            gpt=gpt,
             chat_history=ChatHistory(max_turns=chat_hist_size),
             system_msg=SystemMsg(content=SYS_PROMPT),
+            output_format=GeneratedPythonCode,
         )
 
     def generate_and_print(self, user_input, clipboard=False):
@@ -49,8 +50,8 @@ class CodeGenerator:
             f"🧠 [bold green] Got your code generation request{clipboard_mention}working... 🤖[/bold green]"
         )
         response = self.agent.chat(UserMsg(content=user_input))
-        explanation = response.content_parsed.explanation_for_user
-        code = response.content_parsed.generated_python_code
+        explanation = response.content_parsed.explanation
+        code = response.content_parsed.python_code
         pyperclip.copy(code)
         self.console_printer.print("🧠 [bold green] Code generation request completed.[/bold green]")
         self.console_printer.print_python(code)
