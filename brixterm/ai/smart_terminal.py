@@ -122,7 +122,6 @@ class SmartTerminal:
         response = self.gpt.generate(
             messages=[UserMsg(text=user_prompt)],
             response_schema=TerminalCommand,
-            response_mime_type="application/json",
             system_instruction=SYS_PROMPT,
         )
         return response.parsed.terminal_command, response.parsed.explanation

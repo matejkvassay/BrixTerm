@@ -30,5 +30,5 @@ class ChatBot:
     def chat(self, user_input: str, clipboard=False) -> str:
         if clipboard:
             user_input += f"\n\nBelow is copy of relevant context from my clipboard:\n\n{pyperclip.paste()}"
-        assistant_msg = self.agent.chat(text=user_input)
+        assistant_msg = self.agent.chat(user_input)
         return "🤖💬 " + assistant_msg.text

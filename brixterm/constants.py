@@ -1,5 +1,4 @@
 # flake8: noqa: E501
-DEFAULT_GPT_MODEL = "gpt-4o-mini"
 CMD_HIST_SIZE = 10
 CHAT_HIST_SIZE = 10
 TERM_INPUT_PREFIX = (
@@ -24,5 +23,3 @@ INTRODUCTION_MSG = (
     "Content of your clipboard is automatically pasted to the chatbot prompt as a context.\n"
     "[bold purple]7. 🏃💨️ EXIT[/bold purple] - Type [bold purple]q[/bold purple] to exit.\n\n"
 )
-PHOENIX_HOST = "localhost"
-PHOENIX_PORT = "4317"

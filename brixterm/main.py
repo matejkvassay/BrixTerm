@@ -11,7 +11,7 @@ from brixterm.console_printer import ConsolePrinter
 from brixterm.constants import CHAT_HIST_SIZE, CMD_HIST_SIZE
 from brixterm.terminal_app import TerminalApp
 
-logging.basicConfig(level=logging.DEBUG, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 logger = logging.getLogger()
 
 dotenv.load_dotenv()

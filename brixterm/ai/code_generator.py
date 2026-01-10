@@ -38,10 +38,7 @@ class CodeGenerator:
             f"🧠 [bold green] Got your code generation request{clipboard_mention}working... 🤖[/bold green]"
         )
         response = self.gpt.generate(
-            messages=[UserMsg(text=user_input)],
-            system_instruction=SYS_PROMPT,
-            response_schema=GeneratedPythonCode,
-            response_mime_type="application/json",
+            messages=[UserMsg(text=user_input)], system_instruction=SYS_PROMPT, response_schema=GeneratedPythonCode
         )
         explanation = response.parsed.explanation
         code = response.parsed.python_code
