@@ -1,8 +1,6 @@
 import pyperclip
-from llmbrix.agent import Agent
-from llmbrix.chat_history import ChatHistory
-from llmbrix.gpt_openai import GptOpenAI
-from llmbrix.msg import SystemMsg, UserMsg
+from llmbrix.gemini_model import GeminiModel
+from llmbrix.msg import UserMsg
 from pydantic import BaseModel, Field
 
 from brixterm.console_printer import ConsolePrinter
@@ -26,19 +24,9 @@ class GeneratedPythonCode(BaseModel):
 
 
 class CodeGenerator:
-    def __init__(
-        self,
-        gpt: GptOpenAI,
-        console_printer: ConsolePrinter,
-        chat_hist_size=10,
-    ):
+    def __init__(self, gpt: GeminiModel, console_printer: ConsolePrinter):
         self.console_printer = console_printer
-        self.agent = Agent(
-            gpt=gpt,
-            chat_history=ChatHistory(max_turns=chat_hist_size),
-            system_msg=SystemMsg(content=SYS_PROMPT),
-            output_format=GeneratedPythonCode,
-        )
+        self.gpt = gpt
 
     def generate_and_print(self, user_input, clipboard=False):
         clipboard_mention = ", "
@@ -49,9 +37,11 @@ class CodeGenerator:
         self.console_printer.print(
             f"🧠 [bold green] Got your code generation request{clipboard_mention}working... 🤖[/bold green]"
         )
-        response = self.agent.chat(UserMsg(content=user_input))
-        explanation = response.content_parsed.explanation
-        code = response.content_parsed.python_code
+        response = self.gpt.generate(
+            messages=[UserMsg(text=user_input)], system_instruction=SYS_PROMPT, response_schema=GeneratedPythonCode
+        )
+        explanation = response.parsed.explanation
+        code = response.parsed.python_code
         pyperclip.copy(code)
         self.console_printer.print("🧠 [bold green] Code generation request completed.[/bold green]")
         self.console_printer.print_python(code)
