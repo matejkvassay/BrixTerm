@@ -1,15 +1,12 @@
 import pyperclip
-from llmbrix.agent import Agent
 from llmbrix.chat_history import ChatHistory
-from llmbrix.gpt_openai import GptOpenAI
-from llmbrix.msg import SystemMsg, UserMsg
-from llmbrix.prompt import Prompt
+from llmbrix.gemini_model import GeminiModel
+from llmbrix.tool_agent import ToolAgent
 
 from brixterm.ai.tools import PasteToClipboard
 
-SYS_PROMPT = Prompt(
-    "You are terminal chatbot assistant `BrixTerm`. \n\n"
-    "You internally use following AI model: '{{model}}'. "
+SYS_PROMPT = (
+    "You are terminal chatbot assistant `BrixTerm`."
     "User is developer who can ask any kind of questions. "
     "Your answers will be printed into terminal. "
     "Make sure they are easily readable in small window. "
@@ -22,16 +19,16 @@ SYS_PROMPT = Prompt(
 
 
 class ChatBot:
-    def __init__(self, gpt: GptOpenAI, chat_hist_size: int = 10):
-        self.agent = Agent(
-            gpt=gpt,
+    def __init__(self, gpt: GeminiModel, chat_hist_size: int = 10):
+        self.agent = ToolAgent(
+            gemini_model=gpt,
             chat_history=ChatHistory(max_turns=chat_hist_size),
-            system_msg=SystemMsg(content=SYS_PROMPT.render({"model": gpt.model})),
+            system_instruction=SYS_PROMPT,
             tools=[PasteToClipboard()],
         )
 
     def chat(self, user_input: str, clipboard=False) -> str:
         if clipboard:
             user_input += f"\n\nBelow is copy of relevant context from my clipboard:\n\n{pyperclip.paste()}"
-        assistant_msg = self.agent.chat(UserMsg(content=user_input))
-        return "🤖💬 " + assistant_msg.content
+        assistant_msg = self.agent.chat(text=user_input)
+        return "🤖💬 " + assistant_msg.text

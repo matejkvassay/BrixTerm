@@ -1,11 +1,9 @@
 from subprocess import CompletedProcess
 
-from pydantic import BaseModel, Field
 from jinja2 import Template
-from llmbrix.tool_agent import ToolAgent
-from llmbrix.chat_history import ChatHistory
 from llmbrix.gemini_model import GeminiModel
 from llmbrix.msg import UserMsg
+from pydantic import BaseModel, Field
 
 from brixterm.command_executor import CommandExecutor
 from brixterm.command_history import CommandHistory
@@ -19,7 +17,8 @@ SYS_PROMPT = (
     "Your task is to suggest corrected unix command that would work for the user."
 )
 
-USER_PROMPT = Template("""
+USER_PROMPT = Template(
+    """
     # Command typed by user
 
         ```bash
@@ -74,7 +73,8 @@ USER_PROMPT = Template("""
         ```text
         {{intro}}
         ```
-    """)
+    """
+)
 
 
 class TerminalCommand(BaseModel):
@@ -88,23 +88,16 @@ class TerminalCommand(BaseModel):
 
 class SmartTerminal:
     def __init__(
-            self,
-            gpt: GeminiModel,
-            command_executor: CommandExecutor,
-            console_printer: ConsolePrinter,
-            command_history: CommandHistory,
-            max_tool_call_iter=3,
-            chat_max_turns=5,
+        self,
+        gpt: GeminiModel,
+        command_executor: CommandExecutor,
+        console_printer: ConsolePrinter,
+        command_history: CommandHistory,
     ):
         self.command_executor = command_executor
         self.console_printer = console_printer
         self.command_history = command_history
-        self.terminal_agent = ToolAgent(
-            gemini_model=gpt,
-            chat_history=ChatHistory(max_turns=chat_max_turns),
-            loop_limit=max_tool_call_iter,
-            system_instruction=SYS_PROMPT
-        )
+        self.gpt = gpt
 
     def _run_and_print(self, cmd):
         completed_process = self.command_executor.execute_shell_cmd(cmd)
@@ -113,7 +106,7 @@ class SmartTerminal:
         return completed_process
 
     def _suggest_command(self, cmd: str, completed_process: CompletedProcess, ctx: ConsoleContext):
-        user_msg = USER_PROMPT.render(
+        user_prompt = USER_PROMPT.render(
             {
                 "cmd": cmd,
                 "stdout": completed_process.stdout,
@@ -126,7 +119,12 @@ class SmartTerminal:
                 "intro": INTRODUCTION_MSG,
             }
         )
-        response = self.terminal_agent.chat(text=user_msg)
+        response = self.gpt.generate(
+            messages=[UserMsg(text=user_prompt)],
+            response_schema=TerminalCommand,
+            response_mime_type="application/json",
+            system_instruction=SYS_PROMPT,
+        )
         return response.parsed.terminal_command, response.parsed.explanation
 
     def run(self, cmd: str, ctx: ConsoleContext):
