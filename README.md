@@ -1,10 +1,8 @@
 ![Brixterm Logo](img/logo.png)
 
-**NOTE** - not maintained, this is a toy project implementing smart terminal app :)
-
 ## About
 
-**BrixTerm** is a simple terminal app that integrates GPT to assist with everyday development tasks.
+**BrixTerm** is a simple terminal app that integrates LLM to assist with everyday development tasks.
 > Implemented using **LLMBrix** framework: https://github.com/matejkvassay/LLMBrix
 
 ---
