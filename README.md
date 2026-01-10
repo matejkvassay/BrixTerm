@@ -68,11 +68,6 @@ The content of your clipboard is automatically passed to the AI chatbot prompt.
 
 Use `q` to exit the application.
 
----
-
-> Note: All GPT powered commands also maintain chat history and remember your previous requests.
-___
-
 ## Usage guide
 
 ### Install
@@ -81,59 +76,15 @@ ___
 pip install brix-term
 ```
 
-### Configure
-
-#### Public OpenAI API configuration
+### Configure Gemini API key
 
 ```bash
-# Configure OpenAI API access
-export OPENAI_API_KEY='<TOKEN>'
-```
-
-#### (alternative) Azure OpenAI API configuration
-
-```bash
-# (ALTERNATIVELY) API access for Azure AI is also supported
-export AZURE_OPENAI_API_KEY='<TOKEN>'
-export AZURE_OPENAI_API_VERSION='<VERSION>'
-export AZURE_OPENAI_ENDPOINT='<ENDPOINT>'
-export AZURE_DEPLOYMENT='<DEPLOYMENT>'
-```
-
-#### BrixTerm settings
-
-```bash
-# (optional) GPT model to be used, default is `gpt-5-mini`
-export BRIXTERM_MODEL='gpt-5-mini'
-
-# (optional) Optimize colors for light mode (dark is default, light support is limited, not recommended)
-export BRIXTERM_COLOR_MODE='light'
+# Configure Gemini API access
+export GOOGLE_API_KEY='<TOKEN>'
 ```
 
 ### Run
 
 ```bash
 brixterm
-```
-
-### Run options
-
-> **Note:** env vars have priority over run arguments
-
-> **Note:** `--light_mode` is enabled in minimal way however dark terminal and dark mode is recommended for better
-> visibility.
-
-```bash
-brixterm --help
-usage: brixterm [-h] [--dev] [--light_mode] [--model MODEL] [--azure]
-
-BrixTerm AI Terminal
-
-options:
-  -h, --help     show this help message and exit
-  --dev          (optional) Run in development mode with Arize Phoenix tracing enabled.
-  --light_mode   (optional) Optimize looks for light mode terminal (dark is default).
-  --model MODEL  (optional) Specify GPT model. (default='gpt-4o-mini')
-  --azure        (optional) Default to Azure. Use to enforce Azure OpenAI API in case both public and Azure OpenAI env vars are set.
-
 ```
