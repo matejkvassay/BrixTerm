@@ -1,12 +1,11 @@
 from subprocess import CompletedProcess
 
-from llmbrix.agent import Agent
-from llmbrix.chat_history import ChatHistory
-from llmbrix.gpt_openai import GptOpenAI
-from llmbrix.msg import SystemMsg, UserMsg
-from llmbrix.prompt import Prompt
-from llmbrix.tools import ListDir
 from pydantic import BaseModel, Field
+from jinja2 import Template
+from llmbrix.tool_agent import ToolAgent
+from llmbrix.chat_history import ChatHistory
+from llmbrix.gemini_model import GeminiModel
+from llmbrix.msg import UserMsg
 
 from brixterm.command_executor import CommandExecutor
 from brixterm.command_history import CommandHistory
@@ -20,8 +19,7 @@ SYS_PROMPT = (
     "Your task is to suggest corrected unix command that would work for the user."
 )
 
-USER_PROMPT = Prompt(
-    """
+USER_PROMPT = Template("""
     # Command typed by user
 
         ```bash
@@ -76,8 +74,7 @@ USER_PROMPT = Prompt(
         ```text
         {{intro}}
         ```
-    """
-)
+    """)
 
 
 class TerminalCommand(BaseModel):
@@ -91,24 +88,22 @@ class TerminalCommand(BaseModel):
 
 class SmartTerminal:
     def __init__(
-        self,
-        gpt: GptOpenAI,
-        command_executor: CommandExecutor,
-        console_printer: ConsolePrinter,
-        command_history: CommandHistory,
-        max_tool_call_iter=5,
-        chat_max_turns=10,
+            self,
+            gpt: GeminiModel,
+            command_executor: CommandExecutor,
+            console_printer: ConsolePrinter,
+            command_history: CommandHistory,
+            max_tool_call_iter=3,
+            chat_max_turns=5,
     ):
         self.command_executor = command_executor
         self.console_printer = console_printer
         self.command_history = command_history
-        self.terminal_agent = Agent(
-            gpt=gpt,
+        self.terminal_agent = ToolAgent(
+            gemini_model=gpt,
             chat_history=ChatHistory(max_turns=chat_max_turns),
-            system_msg=SystemMsg(content=SYS_PROMPT),
-            tools=[ListDir()],
-            output_format=TerminalCommand,
-            max_tool_call_iter=max_tool_call_iter,
+            loop_limit=max_tool_call_iter,
+            system_instruction=SYS_PROMPT
         )
 
     def _run_and_print(self, cmd):
@@ -131,8 +126,8 @@ class SmartTerminal:
                 "intro": INTRODUCTION_MSG,
             }
         )
-        response = self.terminal_agent.chat(UserMsg(content=user_msg))
-        return response.content_parsed.terminal_command, response.content_parsed.explanation
+        response = self.terminal_agent.chat(text=user_msg)
+        return response.parsed.terminal_command, response.parsed.explanation
 
     def run(self, cmd: str, ctx: ConsoleContext):
         completed_process = self._run_and_print(cmd)

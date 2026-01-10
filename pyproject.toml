@@ -12,7 +12,8 @@ version = "0.1.3"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "llmbrix>=0.1.3",
+    "llmbrix>=2.0.0a1",
+    "jinja2",
     "rich",
     "pyperclip"
 ]
