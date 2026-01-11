@@ -5,11 +5,11 @@ from llmbrix.gemini_model import GeminiModel
 from llmbrix.msg import UserMsg
 from pydantic import BaseModel, Field
 
-from brixterm.command_executor import CommandExecutor
-from brixterm.command_history import CommandHistory
-from brixterm.console_context import ConsoleContext
-from brixterm.console_printer import ConsolePrinter
-from brixterm.constants import INTRODUCTION_MSG
+from brixterm._old.command_executor import CommandExecutor
+from brixterm._old.command_history import CommandHistory
+from brixterm._old.console_context import ConsoleContext
+from brixterm._old.console_printer import ConsolePrinter
+from brixterm._old.constants import INTRODUCTION_MSG
 
 SYS_PROMPT = (
     "You are running in special unix terminal. "
