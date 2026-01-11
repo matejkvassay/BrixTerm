@@ -3,6 +3,7 @@ import logging
 
 import dotenv
 import pyperclip
+from google.genai.types import ThinkingLevel
 from llmbrix.chat_history import ChatHistory
 from llmbrix.gemini_model import GeminiModel
 from llmbrix.tool_agent import ToolAgent
@@ -15,19 +16,15 @@ logger = logging.getLogger()
 
 dotenv.load_dotenv()
 USER_NAME = "User"
-MODEL = "gemini-2.5-flash-lite"
+MODEL = "gemini-3-flash-preview"
 CHAT_HISTORY_TURNS = 5
 TOOL_LOOP_LIMIT = 2
-SYSTEM_INSTRUCTION = (
-    "You talk inside small screen, use newlines to ensure short lines."
-    "Use markdown to highlight and format answers. "
-    "Use emojis"
-)
+SYSTEM_INSTRUCTION = "Be brief, to the point." "Use markdown to highlight and format answers. " "Use emojis"
 MODEL_PREFIX = f"\n[cyan]🤖💬  {MODEL}: [/cyan]"
 USER_PREFIX = f"\n[red]👤  {USER_NAME}:[/red]"
 CMD_CLIPBOARD_PASTE = "ccc"
 
-gemini_model = GeminiModel.from_gemini_api_key(model=MODEL)
+gemini_model = GeminiModel.from_gemini_api_key(model=MODEL, thinking_level=ThinkingLevel.MINIMAL)
 chat_history = ChatHistory(max_turns=CHAT_HISTORY_TURNS)
 chatbot = ToolAgent(
     gemini_model=gemini_model,
