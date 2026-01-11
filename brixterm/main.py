@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(leve
 logger = logging.getLogger()
 
 dotenv.load_dotenv()
-USER_NAME = "You"
+USER_NAME = "Matej"
 MODEL = "gemini-2.5-flash-lite"
 CHAT_HISTORY_TURNS = 5
 TOOL_LOOP_LIMIT = 2
@@ -24,7 +24,7 @@ SYSTEM_INSTRUCTION = (
     "Use emojis"
 )
 MODEL_PREFIX = f"\n[cyan]🤖💬  {MODEL}: [/cyan]"
-USER_PREFIX = f"\n[red]👤 {USER_NAME}:[/red]"
+USER_PREFIX = f"\n[red]👤  {USER_NAME}:[/red]"
 CMD_CLIPBOARD_PASTE = "ccc"
 
 gemini_model = GeminiModel.from_gemini_api_key(model=MODEL)
@@ -48,6 +48,7 @@ def main():
             printer.print(f"{USER_PREFIX}\n")
             cmd = input().strip()
         if cmd.lower().strip() in ("exit", "e", "quit", "q"):
+            printer.print(f"{MODEL_PREFIX} See you soon {USER_NAME}!")
             break
         if cmd:
             if cmd.lower().strip().startswith(f"{CMD_CLIPBOARD_PASTE} "):
@@ -57,15 +58,16 @@ def main():
                     continue
                 cmd += f"\n\n Content of user's clipboard:\n{clipboard_content}"
                 printer.print(f"```\n{clipboard_content}\n```")
-            printer.print(f"{MODEL_PREFIX} Typing...")
+            printer.print(f"{MODEL_PREFIX} Thinking...")
             for msg in chatbot.chat_iter(cmd):
-                printer.print(f"{MODEL_PREFIX}\n")
                 if msg.is_model():
                     if msg.text is not None:
+                        printer.print(f"{MODEL_PREFIX}\n")
                         printer.print_markdown(msg.text)
                     if msg.tool_calls:
-                        pass
-
+                        printer.print(
+                            f'{MODEL_PREFIX} Using tools: {[f"{t.name}([red]{t.args}[/red])" for t in msg.tool_calls]}...'
+                        )
         cmd = None
 
 
