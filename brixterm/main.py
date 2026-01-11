@@ -14,7 +14,7 @@ logging.basicConfig(level=logging.ERROR, format="%(asctime)s - %(name)s - %(leve
 logger = logging.getLogger()
 
 dotenv.load_dotenv()
-USER_NAME = "Matej"
+USER_NAME = "User"
 MODEL = "gemini-2.5-flash-lite"
 CHAT_HISTORY_TURNS = 5
 TOOL_LOOP_LIMIT = 2
