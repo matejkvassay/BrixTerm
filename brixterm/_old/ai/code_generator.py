@@ -3,7 +3,7 @@ from llmbrix.gemini_model import GeminiModel
 from llmbrix.msg import UserMsg
 from pydantic import BaseModel, Field
 
-from brixterm.console_printer import ConsolePrinter
+from brixterm._old.console_printer import ConsolePrinter
 
 SYS_PROMPT = (
     "You generate Python code based on users request."

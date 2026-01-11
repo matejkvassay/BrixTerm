@@ -12,6 +12,7 @@ version = "0.2.0"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "climage",
     "dotenv",
     "llmbrix>=2.0.1",
     "jinja2",

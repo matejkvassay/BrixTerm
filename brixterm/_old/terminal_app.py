@@ -4,12 +4,12 @@ import readline  # noqa: F401
 import socket
 from subprocess import CompletedProcess
 
-from brixterm.ai import ChatBot, CodeGenerator, SmartTerminal
-from brixterm.command_executor import CommandExecutor
-from brixterm.command_history import CommandHistory
-from brixterm.console_context import ConsoleContext
-from brixterm.console_printer import ConsolePrinter
-from brixterm.constants import INTRODUCTION_MSG, TERM_INPUT_PREFIX
+from brixterm._old.ai import ChatBot, CodeGenerator, SmartTerminal
+from brixterm._old.command_executor import CommandExecutor
+from brixterm._old.command_history import CommandHistory
+from brixterm._old.console_context import ConsoleContext
+from brixterm._old.console_printer import ConsolePrinter
+from brixterm._old.constants import INTRODUCTION_MSG, TERM_INPUT_PREFIX
 
 
 class TerminalApp:
@@ -91,19 +91,19 @@ class TerminalApp:
                 else:
                     cmd_name = cmd.split(" ")[0].strip()
                     cmd_content = " ".join(cmd.split(" ")[1:])
-
-                    if cmd_name == "a" or cmd_name == "aaa":
+                    if cmd_name == "c" or cmd_name == "ccc":
+                        self.code_generator.generate_and_print(cmd_content, clipboard=cmd_name == "ccc")
+                        cmd = None
+                        continue
+                    elif cmd_name == "t":
+                        cmd = self.smart_terminal.run(cmd, ctx)
+                        continue
+                    else:
                         self.console_printer.print("🤖💬 Typing...")
                         answer = self.chatbot.chat(cmd_content, clipboard=cmd_name == "aaa")
                         self.console_printer.print_markdown(answer)
                         cmd = None
                         continue
-                    elif cmd_name == "c" or cmd_name == "ccc":
-                        self.code_generator.generate_and_print(cmd_content, clipboard=cmd_name == "ccc")
-                        cmd = None
-                        continue
-                    else:
-                        cmd = self.smart_terminal.run(cmd, ctx)
             except KeyboardInterrupt:
                 self.console_printer.print("\n(Interrupted)")
                 cmd = None

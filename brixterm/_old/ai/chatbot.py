@@ -3,7 +3,7 @@ from llmbrix.chat_history import ChatHistory
 from llmbrix.gemini_model import GeminiModel
 from llmbrix.tool_agent import ToolAgent
 
-from brixterm.ai.tools import PasteToClipboard
+from brixterm._old.ai.tools import PasteToClipboard
 
 SYS_PROMPT = (
     "You are terminal chatbot assistant `BrixTerm`."
@@ -28,7 +28,9 @@ class ChatBot:
         )
 
     def chat(self, user_input: str, clipboard=False) -> str:
+        print(user_input)
         if clipboard:
             user_input += f"\n\nBelow is copy of relevant context from my clipboard:\n\n{pyperclip.paste()}"
         assistant_msg = self.agent.chat(user_input)
+        print(assistant_msg)
         return "🤖💬 " + assistant_msg.text
